@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scientific Calculator &amp; Math Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-page:#E9DFCF;
+    --bg-grid:#D9C7AC;
+    --casing:#0F414A;
+    --casing-2:#1E5A66;
+    --lcd-bg:#96C0CE;
+    --lcd-ink:#0F414A;
+    --amber:#7F0303;
+    --amber-dark:#5C0202;
+    --key-light:#EFE8DF;
+    --key-light-shadow:#CFC2AE;
+    --key-dark:#D8BA98;
+    --key-dark-shadow:#B89A78;
+    --ink:#0F414A;
+    --tape:#EFE8DF;
+    --radius-lg:22px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background-color:var(--bg-page);
+    background-image:
+      linear-gradient(var(--bg-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+    background-size:26px 26px;
+    min-height:100vh;
+    padding:28px 18px 60px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+  header.top{text-align:center;margin-bottom:22px;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:2.5px;
+    color:var(--amber-dark);
+    font-weight:700;
+    text-transform:uppercase;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:clamp(26px,4vw,38px);
+    margin:6px 0 4px;
+    color:var(--casing);
+  }
+  .sub{color:#4C6B72;font-size:14.5px;max-width:560px;margin:0 auto;}
+
+  nav.tabs{display:flex;justify-content:center;gap:10px;margin:26px 0;}
+  .tab-btn{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15px;
+    font-weight:700;
+    padding:10px 22px;
+    border-radius:30px;
+    border:1.5px solid var(--casing);
+    background:transparent;
+    color:var(--casing);
+    cursor:pointer;
+  }
+  .tab-btn.active{background:var(--casing);color:var(--tape);}
+  .tab-btn:focus-visible, button:focus-visible, .pill:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---------- Calculator view ---------- */
+  .app-layout{
+    display:flex;
+    gap:24px;
+    align-items:flex-start;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .calculator-shell{
+    background:linear-gradient(160deg,var(--casing),var(--casing-2));
+    border-radius:var(--radius-lg);
+    padding:20px;
+    width:360px;
+    box-shadow:0 22px 44px -12px rgba(15,65,74,.45);
+  }
+  .lcd-screen{
+    background:var(--lcd-bg);
+    border-radius:14px;
+    padding:16px 16px 14px;
+    box-shadow:inset 0 3px 10px rgba(0,0,0,.3);
+    margin-bottom:14px;
+  }
+  .lcd-top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .angle-toggle{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:1px;
+    background:rgba(15,65,74,.12);
+    color:var(--lcd-ink);
+    border:1px solid rgba(15,65,74,.35);
+    border-radius:6px;
+    padding:3px 8px;
+    cursor:pointer;
+  }
+  .lcd-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(15,65,74,.55);letter-spacing:1px;}
+  .lcd-expression{
+    font-family:'JetBrains Mono',monospace;
+    color:rgba(15,65,74,.7);
+    font-size:14px;
+    min-height:18px;
+    text-align:right;
+    letter-spacing:.5px;
+    white-space:nowrap;
+    overflow-x:auto;
+  }
+  .lcd-result{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--lcd-ink);
+    font-size:38px;
+    font-weight:700;
+    text-align:right;
+    white-space:nowrap;
+    overflow-x:auto;
+    margin-top:2px;
+  }
+  .lcd-result.long{font-size:26px;}
+
+  .keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .key{
+    border:none;
+    border-radius:10px;
+    padding:14px 0;
+    font-size:16px;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .key:active{transform:translateY(2px);}
+  .key-num{background:var(--key-light);color:var(--amber);box-shadow:0 3px 0 var(--key-light-shadow);}
+  .key-sci{background:var(--key-dark);color:var(--ink);font-size:13.5px;box-shadow:0 3px 0 var(--key-dark-shadow);}
+  .key-op{background:var(--amber);color:var(--lcd-bg);font-size:18px;box-shadow:0 3px 0 var(--amber-dark);}
+  .key-clear{background:transparent;color:var(--tape);border:1.5px solid rgba(239,232,223,.45);box-shadow:none;font-size:13.5px;}
+  .key-eq{background:var(--amber-dark);color:var(--key-dark);grid-column:1/-1;font-size:20px;box-shadow:0 3px 0 #350101;}
+  sup{font-size:11px;}
+
+  /* ---------- Paper tape ---------- */
+  .tape-panel{
+    width:300px;
+    background:var(--tape);
+    border-radius:6px;
+    padding:22px 16px 16px;
+    box-shadow:0 14px 30px -10px rgba(15,65,74,.3);
+    position:relative;
+    max-height:560px;
+    display:flex;
+    flex-direction:column;
+  }
+  .tape-panel::before{
+    content:"";
+    position:absolute;
+    top:-9px;left:0;right:0;height:10px;
+    background:
+      linear-gradient(135deg,var(--tape) 50%,transparent 50%),
+      linear-gradient(45deg,var(--tape) 50%,transparent 50%);
+    background-size:16px 16px;
+    background-position:0 0,8px 0;
+    background-repeat:repeat-x;
+  }
+  .tape-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+  .tape-title{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;letter-spacing:1.5px;color:var(--casing);}
+  .tape-clear{font-family:'Inter';font-size:11px;background:none;border:none;color:var(--amber-dark);cursor:pointer;text-decoration:underline;padding:0;}
+  .tape-caption{font-size:11.5px;color:#6E8489;margin-bottom:10px;}
+  .tape-roll{overflow-y:auto;flex:1;}
+  .tape-step{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--ink);border-bottom:1px dashed rgba(15,65,74,.22);padding:8px 0;}
+  .tape-step.err{color:var(--amber);}
+  .tape-empty{font-size:12.5px;color:rgba(15,65,74,.4);font-style:italic;padding:8px 0;}
+
+  /* ---------- Formula reference view ---------- */
+  .ref-intro{max-width:680px;margin:0 auto 22px;text-align:center;color:#4C6B72;font-size:14.5px;}
+  .pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:26px;}
+  .pill{border-radius:20px;padding:8px 16px;border:1.5px solid var(--casing);background:transparent;color:var(--casing);cursor:pointer;font-size:13px;font-weight:600;font-family:'Inter';}
+  .pill.active{background:var(--casing);color:var(--tape);}
+
+  .card-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:18px;
+    max-width:1180px;
+    margin:0 auto;
+  }
+  .formula-card{
+    background:#fff;
+    border:1.5px solid rgba(15,65,74,.14);
+    border-radius:14px;
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .card-cat{font-size:10.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--amber-dark);font-weight:700;}
+  .card-name{font-family:'Space Grotesk',sans-serif;font-size:17px;margin:0;color:var(--casing);}
+  .card-formula{font-family:'JetBrains Mono',monospace;background:var(--bg-page);padding:8px 10px;border-radius:8px;font-size:13.5px;line-height:1.5;}
+  .card-note{font-size:12.5px;color:#4C6B72;margin:0;line-height:1.45;}
+  .example-toggle{
+    align-self:flex-start;
+    background:none;
+    border:1.5px solid var(--casing);
+    color:var(--casing);
+    border-radius:20px;
+    padding:6px 14px;
+    font-size:12.5px;
+    cursor:pointer;
+    font-family:'Inter';
+    font-weight:600;
+    margin-top:4px;
+  }
+  .example-block{
+    background:var(--tape);
+    border-radius:8px;
+    padding:12px 14px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    line-height:1.6;
+  }
+  .example-block.hidden{display:none;}
+  .ex-problem{font-weight:700;margin-bottom:6px;color:var(--casing);}
+  .ex-steps{margin:0 0 6px 0;padding-left:18px;}
+  .ex-steps li{margin-bottom:3px;}
+  .ex-answer{font-weight:700;color:var(--amber-dark);}
+
+  footer.note{text-align:center;color:#76898C;font-size:12px;margin-top:40px;}
+
+  @media (max-width:760px){
+    .calculator-shell{width:100%;max-width:380px;}
+    .tape-panel{width:100%;max-width:380px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="eyebrow">Algebra · Geometry · Trig · General Math · Probability · Statistics · Calculus</div>
+    <h1>Scientific Calculator &amp; Math Reference</h1>
+    <p class="sub">A full scientific calculator with a running paper-tape log of every step, plus a compiled reference of formulas with worked, manual computations.</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-view="calculator-view">Calculator</button>
+    <button class="tab-btn" data-view="reference-view">Formula Reference</button>
+  </nav>
+
+  <!-- ============ CALCULATOR VIEW ============ -->
+  <section id="calculator-view" class="view active">
+    <div class="app-layout">
+
+      <div class="calculator-shell">
+        <div class="lcd-screen">
+          <div class="lcd-top-row">
+            <span class="lcd-label">SCI · STD</span>
+            <button class="angle-toggle" id="angleModeBtn" title="Toggle angle mode for sin / cos / tan">DEG</button>
+          </div>
+          <div class="lcd-expression" id="lcdExpression">&nbsp;</div>
+          <div class="lcd-result" id="lcdResult">0</div>
+        </div>
+
+        <div class="keypad" id="keypad">
+          <button class="key key-sci" data-action="cube">x³</button>
+          <button class="key key-sci" data-action="sqrt">√x</button>
+          <button class="key key-sci" data-action="square">x²</button>
+          <button class="key key-op" data-op="^">x<sup>y</sup></button>
+
+          <button class="key key-sci" data-action="sin">sin</button>
+          <button class="key key-sci" data-action="cos">cos</button>
+          <button class="key key-sci" data-action="tan">tan</button>
+          <button class="key key-op" data-action="percent">%</button>
+
+          <button class="key key-sci" data-action="pi">π</button>
+          <button class="key key-sci" data-action="euler">e</button>
+          <button class="key key-sci" data-action="reciprocal">1/x</button>
+          <button class="key key-clear" data-action="backspace">⌫</button>
+
+          <button class="key key-clear" data-action="clear-all">AC</button>
+          <button class="key key-clear" data-action="clear-entry">CE</button>
+          <button class="key key-sci" data-action="log">log</button>
+          <button class="key key-sci" data-action="ln">ln</button>
+
+          <button class="key key-num" data-digit="7">7</button>
+          <button class="key key-num" data-digit="8">8</button>
+          <button class="key key-num" data-digit="9">9</button>
+          <button class="key key-op" data-op="÷">÷</button>
+
+          <button class="key key-num" data-digit="4">4</button>
+          <button class="key key-num" data-digit="5">5</button>
+          <button class="key key-num" data-digit="6">6</button>
+          <button class="key key-op" data-op="×">×</button>
+
+          <button class="key key-num" data-digit="1">1</button>
+          <button class="key key-num" data-digit="2">2</button>
+          <button class="key key-num" data-digit="3">3</button>
+          <button class="key key-op" data-op="−">−</button>
+
+          <button class="key key-num" data-action="negate">±</button>
+          <button class="key key-num" data-digit="0">0</button>
+          <button class="key key-num" data-action="decimal">.</button>
+          <button class="key key-op" data-op="+">+</button>
+
+          <button class="key key-eq" data-action="equals">=</button>
+        </div>
+      </div>
+
+      <aside class="tape-panel">
+        <div class="tape-header">
+          <span class="tape-title">PAPER TAPE</span>
+          <button class="tape-clear" id="clearTapeBtn">clear tape</button>
+        </div>
+        <div class="tape-caption">Every step your calculator performs, logged like a receipt.</div>
+        <div class="tape-roll" id="tapeRoll">
+          <div class="tape-empty">No calculations yet — start pressing keys.</div>
+        </div>
+      </aside>
+
+    </div>
+  </section>
+
+  <!-- ============ FORMULA REFERENCE VIEW ============ -->
+  <section id="reference-view" class="view">
+    <p class="ref-intro">A compiled set of formulas across seven subjects. Tap <strong>Show worked example</strong> on any card to see the manual, step-by-step computation.</p>
+    <div class="pills" id="categoryPills"></div>
+    <div class="card-grid" id="cardGrid"></div>
+  </section>
+
+  <footer class="note">Built for studying — double-check critical work by hand.</footer>
+</div>
+
+<script>
+/* =========================================================
+   TAB SWITCHING
+   ========================================================= */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.view).classList.add('active');
+  });
+});
+
+/* =========================================================
+   CALCULATOR LOGIC
+   ========================================================= */
+const lcdExpression = document.getElementById('lcdExpression');
+const lcdResult = document.getElementById('lcdResult');
+const angleModeBtn = document.getElementById('angleModeBtn');
+const tapeRoll = document.getElementById('tapeRoll');
+const clearTapeBtn = document.getElementById('clearTapeBtn');
+
+let display = '0';
+let firstOperand = null;
+let operator = null;
+let waitingForSecondOperand = false;
+let angleMode = 'DEG';
+let hasLogged = false;
+
+function fmt(n){
+  if (n === null || n === undefined || Number.isNaN(n)) return 'Error';
+  if (!isFinite(n)) return 'Error';
+  if (Math.abs(n) < 1e-10) n = 0;
+  let rounded = Math.round(n * 1e10) / 1e10;
+  return rounded.toString();
+}
+
+function opLabel(op){
+  return op === '^' ? 'xʸ' : op;
+}
+
+function logStep(text, isError){
+  if (!hasLogged){
+    tapeRoll.innerHTML = '';
+    hasLogged = true;
+  }
+  const line = document.createElement('div');
+  line.className = 'tape-step' + (isError ? ' err' : '');
+  line.textContent = text;
+  tapeRoll.appendChild(line);
+  tapeRoll.scrollTop = tapeRoll.scrollHeight;
+}
+
+function refreshDisplay(){
+  lcdResult.textContent = display;
+  lcdResult.classList.toggle('long', display.length > 10);
+  if (operator && firstOperand !== null){
+    lcdExpression.textContent = fmt(firstOperand) + ' ' + opLabel(operator);
+  } else {
+    lcdExpression.textContent = '\u00A0';
+  }
+}
+
+function inputDigit(d){
+  if (waitingForSecondOperand){
+    display = d;
+    waitingForSecondOperand = false;
+  } else {
+    display = (display === '0') ? d : display + d;
+  }
+  refreshDisplay();
+}
+
+function inputDecimal(){
+  if (waitingForSecondOperand){
+    display = '0.';
+    waitingForSecondOperand = false;
+    refreshDisplay();
+    return;
+  }
+  if (!display.includes('.')) display += '.';
+  refreshDisplay();
+}
+
+function backspace(){
+  if (waitingForSecondOperand) return;
+  display = display.length > 1 ? display.slice(0,-1) : '0';
+  refreshDisplay();
+}
+
+function negate(){
+  if (display === '0') return;
+  display = display.startsWith('-') ? display.slice(1) : '-' + display;
+  refreshDisplay();
+}
+
+function clearAll(){
+  display = '0';
+  firstOperand = null;
+  operator = null;
+  waitingForSecondOperand = false;
+  refreshDisplay();
+}
+
+function clearEntry(){
+  display = '0';
+  refreshDisplay();
+}
+
+function calculate(a,b,op){
+  switch(op){
+    case '+': return {value:a+b};
+    case '−': return {value:a-b};
+    case '×': return {value:a*b};
+    case '÷':
+      if (b === 0) return {value:NaN, error:'cannot divide by zero'};
+      return {value:a/b};
+    case '^': return {value:Math.pow(a,b)};
+  }
+}
+
+function applyOperator(nextOperator){
+  const inputValue = parseFloat(display);
+
+  if (operator && waitingForSecondOperand){
+    operator = nextOperator;
+    refreshDisplay();
+    return;
+  }
+
+  if (firstOperand === null){
+    firstOperand = inputValue;
+  } else if (operator){
+    const res = calculate(firstOperand, inputValue, operator);
+    if (res.error){
+      logStep(fmt(firstOperand) + ' ' + opLabel(operator) + ' ' + fmt(inputValue) + ' \u2192 Error: ' + res.error, true);
+      display = 'Error';
+      firstOperand = null;
+      operator = null;
+      waitingForSecondOperand = true;
+      refreshDisplay();
+      return;
+    }
+    logStep(fmt(firstOperand) + ' ' + opLabel(operator) + ' ' + fmt(inputValue) + ' = ' + fmt(res.value));
+    display = fmt(res.value);
+    firstOperand = res.value;
+  }
+
+  waitingForSecondOperand = true;
+  operator = nextOperator;
+  refreshDisplay();
+}
+
+function equals(){
+  if (operator === null || firstOperand === null) return;
+  const inputValue = waitingForSecondOperand ? firstOperand : parseFloat(display);
+  const res = calculate(firstOperand, inputValue, operator);
+  if (res.error){
+    logStep(fmt(firstOperand) + ' ' + opLabel(operator) + ' ' + fmt(inputValue) + ' \u2192 Error: ' + res.error, true);
+    display = 'Error';
+  } else {
+    logStep(fmt(firstOperand) + ' ' + opLabel(operator) + ' ' + fmt(inputValue) + ' = ' + fmt(res.value));
+    display = fmt(res.value);
+  }
+  firstOperand = null;
+  operator = null;
+  waitingForSecondOperand = true;
+  refreshDisplay();
+}
+
+function unary(action){
+  const v = parseFloat(display);
+  let result, text, error = false;
+
+  switch(action){
+    case 'sqrt':
+      if (v < 0){ error = true; text = '√(' + fmt(v) + ') \u2192 Error: no real square root of a negative number'; }
+      else { result = Math.sqrt(v); text = '√(' + fmt(v) + ') = ' + fmt(result); }
+      break;
+    case 'square':
+      result = v*v; text = fmt(v) + '² = ' + fmt(v) + ' × ' + fmt(v) + ' = ' + fmt(result);
+      break;
+    case 'cube':
+      result = v*v*v; text = fmt(v) + '³ = ' + fmt(v) + ' × ' + fmt(v) + ' × ' + fmt(v) + ' = ' + fmt(result);
+      break;
+    case 'reciprocal':
+      if (v === 0){ error = true; text = '1 ÷ 0 \u2192 Error: cannot divide by zero'; }
+      else { result = 1/v; text = '1 ÷ ' + fmt(v) + ' = ' + fmt(result); }
+      break;
+    case 'percent':
+      result = v/100; text = fmt(v) + '% = ' + fmt(v) + ' ÷ 100 = ' + fmt(result);
+      break;
+    case 'log':
+      if (v <= 0){ error = true; text = 'log(' + fmt(v) + ') \u2192 Error: input must be greater than 0'; }
+      else { result = Math.log10(v); text = 'log(' + fmt(v) + ') = ' + fmt(result); }
+      break;
+    case 'ln':
+      if (v <= 0){ error = true; text = 'ln(' + fmt(v) + ') \u2192 Error: input must be greater than 0'; }
+      else { result = Math.log(v); text = 'ln(' + fmt(v) + ') = ' + fmt(result); }
+      break;
+    case 'sin': case 'cos': case 'tan': {
+      const rad = angleMode === 'DEG' ? v * Math.PI/180 : v;
+      result = Math[action](rad);
+      const unitTxt = angleMode === 'DEG' ? '°' : ' rad';
+      text = action + '(' + fmt(v) + unitTxt + ') = ' + fmt(result);
+      break;
+    }
+  }
+
+  if (error){
+    logStep(text, true);
+    display = 'Error';
+    waitingForSecondOperand = true;
+  } else {
+    logStep(text);
+    display = fmt(result);
+    waitingForSecondOperand = true;
+  }
+  refreshDisplay();
+}
+
+function insertConstant(name){
+  const value = name === 'pi' ? Math.PI : Math.E;
+  const symbol = name === 'pi' ? 'π' : 'e';
+  display = fmt(value);
+  waitingForSecondOperand = true;
+  logStep('Inserted constant ' + symbol + ' \u2248 ' + fmt(value));
+  refreshDisplay();
+}
+
+document.getElementById('keypad').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button');
+  if (!btn) return;
+
+  if (btn.dataset.digit !== undefined){ inputDigit(btn.dataset.digit); return; }
+  if (btn.dataset.op !== undefined){ applyOperator(btn.dataset.op); return; }
+
+  switch(btn.dataset.action){
+    case 'decimal': inputDecimal(); break;
+    case 'backspace': backspace(); break;
+    case 'negate': negate(); break;
+    case 'clear-all': clearAll(); break;
+    case 'clear-entry': clearEntry(); break;
+    case 'equals': equals(); break;
+    case 'sqrt': case 'square': case 'cube': case 'reciprocal': case 'percent':
+    case 'log': case 'ln': case 'sin': case 'cos': case 'tan':
+      unary(btn.dataset.action); break;
+    case 'pi': insertConstant('pi'); break;
+    case 'euler': insertConstant('euler'); break;
+  }
+});
+
+angleModeBtn.addEventListener('click', ()=>{
+  angleMode = angleMode === 'DEG' ? 'RAD' : 'DEG';
+  angleModeBtn.textContent = angleMode;
+});
+
+clearTapeBtn.addEventListener('click', ()=>{
+  tapeRoll.innerHTML = '<div class="tape-empty">No calculations yet — start pressing keys.</div>';
+  hasLogged = false;
+});
+
+document.addEventListener('keydown', (e)=>{
+  if (!document.getElementById('calculator-view').classList.contains('active')) return;
+  if (e.key >= '0' && e.key <= '9'){ inputDigit(e.key); return; }
+  if (e.key === '.'){ inputDecimal(); return; }
+  if (e.key === '+'){ applyOperator('+'); return; }
+  if (e.key === '-'){ applyOperator('−'); return; }
+  if (e.key === '*'){ applyOperator('×'); return; }
+  if (e.key === '/'){ e.preventDefault(); applyOperator('÷'); return; }
+  if (e.key === '^'){ applyOperator('^'); return; }
+  if (e.key === 'Enter' || e.key === '='){ e.preventDefault(); equals(); return; }
+  if (e.key === 'Backspace'){ backspace(); return; }
+  if (e.key === 'Escape'){ clearAll(); return; }
+});
+
+refreshDisplay();
+
+/* =========================================================
+   FORMULA REFERENCE DATA + RENDERING
+   ========================================================= */
+const FORMULAS = [
+  { category:'Algebra', items:[
+    { name:'Quadratic Formula', formula:'x = (−b ± √(b²−4ac)) / 2a',
+      note:'Solves any equation of the form ax² + bx + c = 0.',
+      example:{ problem:'Solve 2x² + 5x − 3 = 0',
+        steps:[
+          'Identify a = 2, b = 5, c = −3',
+          'Discriminant: b² − 4ac = 25 − 4(2)(−3) = 25 + 24 = 49',
+          '√49 = 7',
+          'x = (−5 ± 7) / (2·2) = (−5 ± 7) / 4'
+        ], answer:'x = 0.5  or  x = −3' } },
+    { name:'Slope of a Line', formula:'m = (y₂ − y₁) / (x₂ − x₁)',
+      note:'Measures steepness between two points.',
+      example:{ problem:'Find the slope through (2, 3) and (6, 11)',
+        steps:[ 'm = (11 − 3) / (6 − 2)', 'm = 8 / 4' ], answer:'m = 2' } },
+    { name:'Difference of Squares', formula:'a² − b² = (a − b)(a + b)',
+      note:'A quick factoring pattern.',
+      example:{ problem:'Factor x² − 49',
+        steps:[ 'Recognize 49 = 7²', 'Apply pattern with a = x, b = 7' ], answer:'(x − 7)(x + 7)' } },
+    { name:'Perfect Square Trinomial', formula:'a² + 2ab + b² = (a + b)²',
+      note:'Used to spot and expand squared binomials.',
+      example:{ problem:'Expand (x + 4)²',
+        steps:[ 'a = x, b = 4', 'a² = x², 2ab = 8x, b² = 16' ], answer:'x² + 8x + 16' } },
+    { name:'Laws of Exponents', formula:'a^m · a^n = a^(m+n)     (a^m)^n = a^(mn)     a^(−n) = 1/a^n',
+      note:'Core rules for combining powers.',
+      example:{ problem:'Simplify x³ · x⁴',
+        steps:[ 'Same base, add exponents: 3 + 4 = 7' ], answer:'x⁷' } },
+    { name:'Laws of Logarithms', formula:'log(xy) = log x + log y,   log(x/y) = log x − log y,   log(xⁿ) = n·log x',
+      note:'Mirrors the exponent rules for logs.',
+      example:{ problem:'Expand log(8x³)',
+        steps:[ 'log(8x³) = log 8 + log x³', 'log x³ = 3·log x' ], answer:'log 8 + 3·log x' } }
+  ]},
+
+  { category:'Geometry', items:[
+    { name:'Pythagorean Theorem', formula:'a² + b² = c²',
+      note:'Relates the legs and hypotenuse of a right triangle.',
+      example:{ problem:'Find the hypotenuse of a right triangle with legs 3 and 4',
+        steps:[ 'c² = 3² + 4² = 9 + 16 = 25', 'c = √25' ], answer:'c = 5' } },
+    { name:'Circle: Area & Circumference', formula:'A = πr²        C = 2πr',
+      note:'Two core measurements of a circle.',
+      example:{ problem:'A circle has radius 4',
+        steps:[ 'Area: A = π(4²) = 16π ≈ 50.27', 'Circumference: C = 2π(4) = 8π ≈ 25.13' ],
+        answer:'A ≈ 50.27, C ≈ 25.13' } },
+    { name:'Area of a Triangle', formula:'A = ½ · base · height',
+      example:{ problem:'A triangle has base 10 and height 6',
+        steps:[ 'A = ½ × 10 × 6', 'A = ½ × 60' ], answer:'A = 30' } },
+    { name:'Area of a Trapezoid', formula:'A = ½(b₁ + b₂)·h',
+      example:{ problem:'A trapezoid has parallel sides 8 and 5, height 4',
+        steps:[ 'A = ½(8 + 5)(4)', 'A = ½(13)(4) = ½(52)' ], answer:'A = 26' } },
+    { name:'Distance Between Two Points', formula:'d = √[(x₂−x₁)² + (y₂−y₁)²]',
+      example:{ problem:'Find the distance between (1, 2) and (4, 6)',
+        steps:[ 'd = √[(4−1)² + (6−2)²]', 'd = √[9 + 16] = √25' ], answer:'d = 5' } },
+    { name:'Volume of a Cylinder', formula:'V = πr²h',
+      example:{ problem:'A cylinder has radius 3 and height 10',
+        steps:[ 'V = π(3²)(10)', 'V = π(9)(10) = 90π' ], answer:'V ≈ 282.74' } },
+    { name:'Volume of a Sphere', formula:'V = (4/3)πr³',
+      example:{ problem:'A sphere has radius 6',
+        steps:[ 'V = (4/3)π(6³)', 'V = (4/3)π(216) = 288π' ], answer:'V ≈ 904.78' } },
+    { name:'Volume of a Cone', formula:'V = (1/3)πr²h',
+      example:{ problem:'A cone has radius 3 and height 9',
+        steps:[ 'V = (1/3)π(3²)(9)', 'V = (1/3)π(81) = 27π' ], answer:'V ≈ 84.82' } }
+  ]},
+
+  { category:'Trigonometry', items:[
+    { name:'SOH-CAH-TOA', formula:'sin θ = opp/hyp   cos θ = adj/hyp   tan θ = opp/adj',
+      note:'The basic right-triangle ratios.',
+      example:{ problem:'A right triangle has opposite side 3 and hypotenuse 5 (a 3-4-5 triangle)',
+        steps:[ 'Adjacent side: √(5² − 3²) = √16 = 4', 'sin θ = 3/5 = 0.6', 'cos θ = 4/5 = 0.8', 'tan θ = 3/4 = 0.75' ],
+        answer:'θ = sin⁻¹(0.6) ≈ 36.87°' } },
+    { name:'Pythagorean Identity', formula:'sin²θ + cos²θ = 1',
+      example:{ problem:'Verify the identity for θ = 30°',
+        steps:[ 'sin 30° = 0.5 → 0.5² = 0.25', 'cos 30° ≈ 0.8660 → 0.8660² ≈ 0.75', '0.25 + 0.75' ], answer:'= 1 ✓' } },
+    { name:'Law of Sines', formula:'a/sin A = b/sin B = c/sin C',
+      note:'Relates sides and opposite angles in any triangle.',
+      example:{ problem:'A = 30°, a = 10, B = 45°. Find side b.',
+        steps:[ 'b = a · sin B / sin A', 'b = 10 × sin 45° / sin 30°', 'b = 10 × 0.7071 / 0.5' ], answer:'b ≈ 14.14' } },
+    { name:'Law of Cosines', formula:'c² = a² + b² − 2ab·cos C',
+      note:'Used when you know two sides and the included angle.',
+      example:{ problem:'a = 7, b = 10, C = 60°. Find side c.',
+        steps:[ 'c² = 7² + 10² − 2(7)(10)cos 60°', 'c² = 49 + 100 − 140(0.5)', 'c² = 149 − 70 = 79' ], answer:'c ≈ 8.89' } },
+    { name:'Degrees ↔ Radians', formula:'radians = degrees × π/180',
+      example:{ problem:'Convert 90° to radians',
+        steps:[ 'rad = 90 × π/180', 'rad = π/2' ], answer:'≈ 1.5708 rad' } }
+  ]},
+
+  { category:'General Math', items:[
+    { name:'Percentage of a Number', formula:'part = (percent/100) × whole',
+      example:{ problem:'Find 15% of 80',
+        steps:[ '0.15 × 80' ], answer:'= 12' } },
+    { name:'Percent Change', formula:'% change = (new − old)/old × 100',
+      example:{ problem:'A price goes from 50 to 65',
+        steps:[ '(65 − 50)/50 × 100', '15/50 × 100' ], answer:'= 30% increase' } },
+    { name:'Ratio & Proportion', formula:'a/b = c/d  ⟹  a·d = b·c',
+      example:{ problem:'Solve 3/4 = x/20',
+        steps:[ 'Cross multiply: 3 × 20 = 4 × x', '60 = 4x' ], answer:'x = 15' } },
+    { name:'Simple Interest', formula:'I = P · r · t',
+      note:'P = principal, r = annual rate (decimal), t = years.',
+      example:{ problem:'P = $1000, r = 5%, t = 3 years',
+        steps:[ 'I = 1000 × 0.05 × 3' ], answer:'I = $150' } },
+    { name:'Compound Interest', formula:'A = P(1 + r/n)ⁿᵗ',
+      example:{ problem:'P = $1000, r = 5%, compounded yearly (n=1), t = 3 years',
+        steps:[ 'A = 1000(1 + 0.05)³', 'A = 1000(1.157625)' ], answer:'A ≈ $1157.63' } },
+    { name:'PEMDAS (Order of Operations)', formula:'Parentheses → Exponents → Mult/Div → Add/Sub',
+      example:{ problem:'Evaluate 3 + 4 × 2²',
+        steps:[ 'Exponent first: 2² = 4', 'Multiply: 4 × 4 = 16', 'Add: 3 + 16' ], answer:'= 19' } }
+  ]},
+
+  { category:'Probability', items:[
+    { name:'Basic Probability', formula:'P(A) = favorable outcomes / total outcomes',
+      example:{ problem:'A bag has 4 red marbles out of 10 total. Find P(red).',
+        steps:[ 'P(red) = 4/10' ], answer:'= 0.4' } },
+    { name:'Complement Rule', formula:"P(A') = 1 − P(A)",
+      example:{ problem:'If P(red) = 0.4, find P(not red).',
+        steps:[ "P(A') = 1 − 0.4" ], answer:'= 0.6' } },
+    { name:'Independent Events (AND)', formula:'P(A and B) = P(A) × P(B)',
+      example:{ problem:'Probability of heads (0.5) AND rolling a 3 on a die (1/6)',
+        steps:[ 'P = 0.5 × (1/6)' ], answer:'≈ 0.0833' } },
+    { name:'Mutually Exclusive Events (OR)', formula:'P(A or B) = P(A) + P(B)',
+      example:{ problem:'Probability of rolling a 2 OR a 5 on a die',
+        steps:[ 'P(2) = 1/6, P(5) = 1/6', 'P(2 or 5) = 1/6 + 1/6' ], answer:'= 1/3 ≈ 0.333' } },
+    { name:'Combinations', formula:'C(n,r) = n! / [r!(n−r)!]',
+      note:'Order does not matter.',
+      example:{ problem:'How many ways to choose 2 items from 5?',
+        steps:[ 'C(5,2) = 5! / (2!·3!)', '= 120 / (2 × 6)' ], answer:'= 10' } },
+    { name:'Permutations', formula:'P(n,r) = n! / (n−r)!',
+      note:'Order matters.',
+      example:{ problem:'How many ways to arrange 2 items from 5?',
+        steps:[ 'P(5,2) = 5! / 3!', '= 120 / 6' ], answer:'= 20' } }
+  ]},
+
+  { category:'Statistics', items:[
+    { name:'Mean (Average)', formula:'x̄ = Σx / n',
+      example:{ problem:'Data set: 2, 4, 4, 4, 5, 5, 7, 9',
+        steps:[ 'Sum = 2+4+4+4+5+5+7+9 = 40', 'n = 8', '40 / 8' ], answer:'mean = 5' } },
+    { name:'Median', formula:'Middle value of data sorted in order',
+      example:{ problem:'Same data set: 2, 4, 4, 4, 5, 5, 7, 9 (n = 8, even)',
+        steps:[ 'Already sorted', 'Average the 4th and 5th values: (4 + 5)/2' ], answer:'median = 4.5' } },
+    { name:'Mode', formula:'The most frequently occurring value',
+      example:{ problem:'Same data set: 2, 4, 4, 4, 5, 5, 7, 9',
+        steps:[ '4 appears 3 times — more than any other value' ], answer:'mode = 4' } },
+    { name:'Range', formula:'range = max − min',
+      example:{ problem:'Same data set: 2, 4, 4, 4, 5, 5, 7, 9',
+        steps:[ 'max = 9, min = 2', '9 − 2' ], answer:'range = 7' } },
+    { name:'Variance (Population)', formula:'σ² = Σ(x − μ)² / n',
+      example:{ problem:'Same data set, mean μ = 5',
+        steps:[ 'Squared deviations: (2−5)²=9, (4−5)²=1 ×3, (5−5)²=0 ×2, (7−5)²=4, (9−5)²=16',
+                'Sum = 9+3+0+4+16 = 32', '32 / 8' ], answer:'σ² = 4' } },
+    { name:'Standard Deviation', formula:'σ = √(variance)',
+      example:{ problem:'From the variance above, σ² = 4',
+        steps:[ 'σ = √4' ], answer:'σ = 2' } },
+    { name:'Z-Score', formula:'z = (x − μ) / σ',
+      example:{ problem:'x = 7, μ = 5, σ = 2',
+        steps:[ 'z = (7 − 5) / 2' ], answer:'z = 1.0' } }
+  ]},
+
+  { category:'Calculus', items:[
+    { name:'Power Rule (Derivative)', formula:'d/dx[xⁿ] = n·xⁿ⁻¹',
+      example:{ problem:'Differentiate f(x) = x⁴, then evaluate at x = 2',
+        steps:[ "f'(x) = 4x³", "f'(2) = 4(2³) = 4(8)" ], answer:"f'(2) = 32" } },
+    { name:'Derivatives of sin & cos', formula:'d/dx[sin x] = cos x      d/dx[cos x] = −sin x',
+      example:{ problem:'Differentiate f(x) = sin x, then evaluate at x = 0',
+        steps:[ "f'(x) = cos x", "f'(0) = cos(0)" ], answer:"f'(0) = 1" } },
+    { name:'Product Rule', formula:"d/dx[u·v] = u'v + u·v'",
+      example:{ problem:'Differentiate f(x) = x²·sin x, then evaluate at x = π/2',
+        steps:[ "u = x², v = sin x → u' = 2x, v' = cos x",
+                "f'(x) = 2x·sin x + x²·cos x",
+                "f'(π/2) = 2(π/2)(1) + (π/2)²(0) = π" ], answer:"f'(π/2) ≈ 3.14" } },
+    { name:'Quotient Rule', formula:"d/dx[u/v] = (u'v − u·v') / v²",
+      example:{ problem:'Differentiate f(x) = x/(x+1), then evaluate at x = 1',
+        steps:[ "u = x, v = x+1 → u' = 1, v' = 1",
+                "f'(x) = [1(x+1) − x(1)] / (x+1)² = 1/(x+1)²",
+                "f'(1) = 1/(2²)" ], answer:"f'(1) = 0.25" } },
+    { name:'Chain Rule', formula:"d/dx[f(g(x))] = f'(g(x))·g'(x)",
+      example:{ problem:'Differentiate f(x) = (3x+1)⁵, then evaluate at x = 0',
+        steps:[ "Outer: 5(3x+1)⁴, inner derivative: 3", "f'(x) = 15(3x+1)⁴", "f'(0) = 15(1)⁴" ], answer:"f'(0) = 15" } },
+    { name:'Power Rule (Integral)', formula:'∫xⁿ dx = xⁿ⁺¹/(n+1) + C',
+      example:{ problem:'Evaluate the definite integral ∫₀² x³ dx',
+        steps:[ 'Antiderivative: x⁴/4', 'Evaluate at bounds: (2⁴/4) − (0⁴/4)', '= 16/4 − 0' ], answer:'= 4' } },
+    { name:'Fundamental Theorem of Calculus', formula:'∫ₐᵇ f(x) dx = F(b) − F(a)',
+      example:{ problem:'Evaluate ∫₁³ 2x dx',
+        steps:[ 'Antiderivative: F(x) = x²', 'F(3) − F(1) = 9 − 1' ], answer:'= 8' } }
+  ]}
+];
+
+const categoryPills = document.getElementById('categoryPills');
+const cardGrid = document.getElementById('cardGrid');
+const ALL_CATEGORIES = ['All', ...FORMULAS.map(c=>c.category)];
+let activeCategory = 'All';
+
+function renderPills(){
+  categoryPills.innerHTML = '';
+  ALL_CATEGORIES.forEach(cat=>{
+    const pill = document.createElement('button');
+    pill.className = 'pill' + (cat === activeCategory ? ' active' : '');
+    pill.textContent = cat;
+    pill.addEventListener('click', ()=>{
+      activeCategory = cat;
+      renderPills();
+      renderCards();
+    });
+    categoryPills.appendChild(pill);
+  });
+}
+
+function renderCards(){
+  cardGrid.innerHTML = '';
+  FORMULAS.forEach(group=>{
+    if (activeCategory !== 'All' && activeCategory !== group.category) return;
+    group.items.forEach(item=>{
+      const card = document.createElement('div');
+      card.className = 'formula-card';
+
+      const catEl = document.createElement('div');
+      catEl.className = 'card-cat';
+      catEl.textContent = group.category;
+
+      const nameEl = document.createElement('h3');
+      nameEl.className = 'card-name';
+      nameEl.textContent = item.name;
+
+      const formulaEl = document.createElement('div');
+      formulaEl.className = 'card-formula';
+      formulaEl.innerHTML = item.formula;
+
+      card.appendChild(catEl);
+      card.appendChild(nameEl);
+      card.appendChild(formulaEl);
+
+      if (item.note){
+        const noteEl = document.createElement('p');
+        noteEl.className = 'card-note';
+        noteEl.textContent = item.note;
+        card.appendChild(noteEl);
+      }
+
+      if (item.example){
+        const toggle = document.createElement('button');
+        toggle.className = 'example-toggle';
+        toggle.textContent = 'Show worked example';
+
+        const block = document.createElement('div');
+        block.className = 'example-block hidden';
+
+        const probEl = document.createElement('div');
+        probEl.className = 'ex-problem';
+        probEl.innerHTML = 'Problem: ' + item.example.problem;
+        block.appendChild(probEl);
+
+        const stepsList = document.createElement('ol');
+        stepsList.className = 'ex-steps';
+        item.example.steps.forEach(s=>{
+          const li = document.createElement('li');
+          li.innerHTML = s;
+          stepsList.appendChild(li);
+        });
+        block.appendChild(stepsList);
+
+        const ansEl = document.createElement('div');
+        ansEl.className = 'ex-answer';
+        ansEl.innerHTML = 'Answer: ' + item.example.answer;
+        block.appendChild(ansEl);
+
+        toggle.addEventListener('click', ()=>{
+          const isHidden = block.classList.contains('hidden');
+          block.classList.toggle('hidden');
+          toggle.textContent = isHidden ? 'Hide worked example' : 'Show worked example';
+        });
+
+        card.appendChild(toggle);
+        card.appendChild(block);
+      }
+
+      cardGrid.appendChild(card);
+    });
+  });
+}
+
+renderPills();
+renderCards();
+</script>
+</body>
+</html>
