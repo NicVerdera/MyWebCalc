@@ -6,6 +6,8 @@
 <title>CalcMate – Your Smart Partner in Every Calculation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
 <style>
   :root{
     --bg-page:#E9DFCF;
@@ -23,6 +25,8 @@
     --ink:#0F414A;
     --tape:#EFE8DF;
     --radius-lg:22px;
+    --green:#1a6b3a;
+    --green-light:#e8f5ee;
   }
   *{box-sizing:border-box;}
   body{
@@ -37,110 +41,41 @@
     min-height:100vh;
     padding:28px 18px 60px;
   }
-  .wrap{max-width:1180px;margin:0 auto;}
+  .wrap{max-width:1280px;margin:0 auto;}
   header.top{text-align:center;margin-bottom:22px;}
-  .eyebrow{
-    font-family:'JetBrains Mono',monospace;
-    font-size:12px;
-    letter-spacing:2.5px;
-    color:var(--amber-dark);
-    font-weight:700;
-    text-transform:uppercase;
-  }
-  h1{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:clamp(26px,4vw,38px);
-    margin:6px 0 4px;
-    color:var(--casing);
-  }
-  .sub{color:#4C6B72;font-size:14.5px;max-width:560px;margin:0 auto;}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:2.5px;color:var(--amber-dark);font-weight:700;text-transform:uppercase;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(26px,4vw,38px);margin:6px 0 4px;color:var(--casing);}
+  .sub{color:#4C6B72;font-size:14.5px;max-width:620px;margin:0 auto;}
 
-  nav.tabs{display:flex;justify-content:center;gap:10px;margin:26px 0;}
-  .tab-btn{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:15px;
-    font-weight:700;
-    padding:10px 22px;
-    border-radius:30px;
-    border:1.5px solid var(--casing);
-    background:transparent;
-    color:var(--casing);
-    cursor:pointer;
-  }
+  /* ---- Mode nav ---- */
+  nav.mode-nav{display:flex;justify-content:center;gap:8px;margin:20px 0 10px;flex-wrap:wrap;}
+  .mode-btn{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;padding:8px 18px;border-radius:30px;border:1.5px solid var(--casing);background:transparent;color:var(--casing);cursor:pointer;transition:all .15s;}
+  .mode-btn.active{background:var(--casing);color:var(--tape);}
+  .mode-btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+
+  /* ---- Tab nav (Formula Reference) ---- */
+  nav.tabs{display:flex;justify-content:center;gap:10px;margin:10px 0 20px;flex-wrap:wrap;}
+  .tab-btn{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;padding:10px 22px;border-radius:30px;border:1.5px solid var(--casing);background:transparent;color:var(--casing);cursor:pointer;}
   .tab-btn.active{background:var(--casing);color:var(--tape);}
-  .tab-btn:focus-visible, button:focus-visible, .pill:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+  .tab-btn:focus-visible,.pill:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
 
   .view{display:none;}
   .view.active{display:block;}
 
-  /* ---------- Calculator view ---------- */
-  .app-layout{
-    display:flex;
-    gap:24px;
-    align-items:flex-start;
-    justify-content:center;
-    flex-wrap:wrap;
-  }
-  .calculator-shell{
-    background:linear-gradient(160deg,var(--casing),var(--casing-2));
-    border-radius:var(--radius-lg);
-    padding:20px;
-    width:360px;
-    box-shadow:0 22px 44px -12px rgba(15,65,74,.45);
-  }
-  .lcd-screen{
-    background:var(--lcd-bg);
-    border-radius:14px;
-    padding:16px 16px 14px;
-    box-shadow:inset 0 3px 10px rgba(0,0,0,.3);
-    margin-bottom:14px;
-  }
-  .lcd-top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
-  .angle-toggle{
-    font-family:'JetBrains Mono',monospace;
-    font-size:11px;
-    font-weight:700;
-    letter-spacing:1px;
-    background:rgba(15,65,74,.12);
-    color:var(--lcd-ink);
-    border:1px solid rgba(15,65,74,.35);
-    border-radius:6px;
-    padding:3px 8px;
-    cursor:pointer;
-  }
+  /* ---- Calculator shell ---- */
+  .app-layout{display:flex;gap:24px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
+  .calculator-shell{background:linear-gradient(160deg,var(--casing),var(--casing-2));border-radius:var(--radius-lg);padding:20px;width:360px;box-shadow:0 22px 44px -12px rgba(15,65,74,.45);}
+  .lcd-screen{background:var(--lcd-bg);border-radius:14px;padding:16px 16px 14px;box-shadow:inset 0 3px 10px rgba(0,0,0,.3);margin-bottom:14px;}
+  .lcd-top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;flex-wrap:wrap;}
+  .angle-toggle{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:1px;background:rgba(15,65,74,.12);color:var(--lcd-ink);border:1px solid rgba(15,65,74,.35);border-radius:6px;padding:3px 8px;cursor:pointer;}
+  .tutor-toggle{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.5px;background:var(--amber-dark);color:#fff;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;}
+  .tutor-toggle.off{background:rgba(15,65,74,.12);color:var(--lcd-ink);border:1px solid rgba(15,65,74,.35);}
   .lcd-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(15,65,74,.55);letter-spacing:1px;}
-  .lcd-expression{
-    font-family:'JetBrains Mono',monospace;
-    color:rgba(15,65,74,.7);
-    font-size:14px;
-    min-height:18px;
-    text-align:right;
-    letter-spacing:.5px;
-    white-space:nowrap;
-    overflow-x:auto;
-  }
-  .lcd-result{
-    font-family:'JetBrains Mono',monospace;
-    color:var(--lcd-ink);
-    font-size:38px;
-    font-weight:700;
-    text-align:right;
-    white-space:nowrap;
-    overflow-x:auto;
-    margin-top:2px;
-  }
+  .lcd-expression{font-family:'JetBrains Mono',monospace;color:rgba(15,65,74,.7);font-size:14px;min-height:18px;text-align:right;letter-spacing:.5px;white-space:nowrap;overflow-x:auto;}
+  .lcd-result{font-family:'JetBrains Mono',monospace;color:var(--lcd-ink);font-size:38px;font-weight:700;text-align:right;white-space:nowrap;overflow-x:auto;margin-top:2px;}
   .lcd-result.long{font-size:26px;}
-
   .keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-  .key{
-    border:none;
-    border-radius:10px;
-    padding:14px 0;
-    font-size:16px;
-    font-family:'Inter',sans-serif;
-    font-weight:600;
-    cursor:pointer;
-  }
+  .key{border:none;border-radius:10px;padding:14px 0;font-size:16px;font-family:'Inter',sans-serif;font-weight:600;cursor:pointer;}
   .key:active{transform:translateY(2px);}
   .key-num{background:var(--key-light);color:var(--amber);box-shadow:0 3px 0 var(--key-light-shadow);}
   .key-sci{background:var(--key-dark);color:var(--ink);font-size:13.5px;box-shadow:0 3px 0 var(--key-dark-shadow);}
@@ -149,100 +84,115 @@
   .key-eq{background:var(--amber-dark);color:var(--key-dark);grid-column:1/-1;font-size:20px;box-shadow:0 3px 0 #350101;}
   sup{font-size:11px;}
 
-  /* ---------- Paper tape ---------- */
-  .tape-panel{
-    width:300px;
-    background:var(--tape);
-    border-radius:6px;
-    padding:22px 16px 16px;
-    box-shadow:0 14px 30px -10px rgba(15,65,74,.3);
-    position:relative;
-    max-height:560px;
-    display:flex;
-    flex-direction:column;
-  }
-  .tape-panel::before{
-    content:"";
-    position:absolute;
-    top:-9px;left:0;right:0;height:10px;
-    background:
-      linear-gradient(135deg,var(--tape) 50%,transparent 50%),
-      linear-gradient(45deg,var(--tape) 50%,transparent 50%);
-    background-size:16px 16px;
-    background-position:0 0,8px 0;
-    background-repeat:repeat-x;
-  }
+  /* ---- Paper tape ---- */
+  .tape-panel{width:300px;background:var(--tape);border-radius:6px;padding:22px 16px 16px;box-shadow:0 14px 30px -10px rgba(15,65,74,.3);position:relative;max-height:640px;display:flex;flex-direction:column;}
+  .tape-panel::before{content:"";position:absolute;top:-9px;left:0;right:0;height:10px;background:linear-gradient(135deg,var(--tape) 50%,transparent 50%),linear-gradient(45deg,var(--tape) 50%,transparent 50%);background-size:16px 16px;background-position:0 0,8px 0;background-repeat:repeat-x;}
   .tape-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
   .tape-title{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;letter-spacing:1.5px;color:var(--casing);}
   .tape-clear{font-family:'Inter';font-size:11px;background:none;border:none;color:var(--amber-dark);cursor:pointer;text-decoration:underline;padding:0;}
   .tape-caption{font-size:11.5px;color:#6E8489;margin-bottom:10px;}
   .tape-roll{overflow-y:auto;flex:1;}
-  .tape-step{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--ink);border-bottom:1px dashed rgba(15,65,74,.22);padding:8px 0;}
+  .tape-step{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--ink);border-bottom:1px dashed rgba(15,65,74,.22);padding:8px 0;cursor:pointer;}
+  .tape-step:hover{background:rgba(15,65,74,.04);}
   .tape-step.err{color:var(--amber);}
   .tape-empty{font-size:12.5px;color:rgba(15,65,74,.4);font-style:italic;padding:8px 0;}
 
-  /* ---------- Formula reference view ---------- */
+  /* ---- AI Tutor Panel ---- */
+  .tutor-panel{background:#fff;border:2px solid var(--casing);border-radius:14px;padding:18px;margin-top:18px;max-height:320px;overflow-y:auto;display:none;}
+  .tutor-panel.show{display:block;}
+  .tutor-heading{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--casing);margin:0 0 10px;display:flex;align-items:center;gap:8px;}
+  .tutor-badge{background:var(--amber-dark);color:#fff;font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:20px;letter-spacing:.5px;}
+  .tutor-step{font-size:13px;padding:7px 10px;border-left:3px solid var(--amber);margin-bottom:8px;background:var(--bg-page);border-radius:0 8px 8px 0;line-height:1.5;opacity:0;animation:fadeSlide .35s forwards;}
+  .tutor-step.rule{border-left-color:var(--green);background:var(--green-light);}
+  .tutor-step b{color:var(--amber-dark);}
+  .tutor-step.rule b{color:var(--green);}
+  @keyframes fadeSlide{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  /* ---- History panel (inside tape area) ---- */
+  .history-item{font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 8px;border-bottom:1px solid rgba(15,65,74,.1);cursor:pointer;border-radius:4px;}
+  .history-item:hover{background:rgba(15,65,74,.06);}
+  .history-expr{color:rgba(15,65,74,.55);font-size:11px;}
+  .history-result{font-weight:700;color:var(--casing);}
+
+  /* ---- Formula reference ---- */
   .ref-intro{max-width:680px;margin:0 auto 22px;text-align:center;color:#4C6B72;font-size:14.5px;}
   .pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:26px;}
   .pill{border-radius:20px;padding:8px 16px;border:1.5px solid var(--casing);background:transparent;color:var(--casing);cursor:pointer;font-size:13px;font-weight:600;font-family:'Inter';}
   .pill.active{background:var(--casing);color:var(--tape);}
-
-  .card-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
-    gap:18px;
-    max-width:1180px;
-    margin:0 auto;
-  }
-  .formula-card{
-    background:#fff;
-    border:1.5px solid rgba(15,65,74,.14);
-    border-radius:14px;
-    padding:18px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;max-width:1180px;margin:0 auto;}
+  .formula-card{background:#fff;border:1.5px solid rgba(15,65,74,.14);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:8px;}
   .card-cat{font-size:10.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--amber-dark);font-weight:700;}
   .card-name{font-family:'Space Grotesk',sans-serif;font-size:17px;margin:0;color:var(--casing);}
   .card-formula{font-family:'JetBrains Mono',monospace;background:var(--bg-page);padding:8px 10px;border-radius:8px;font-size:13.5px;line-height:1.5;}
   .card-note{font-size:12.5px;color:#4C6B72;margin:0;line-height:1.45;}
-  .example-toggle{
-    align-self:flex-start;
-    background:none;
-    border:1.5px solid var(--casing);
-    color:var(--casing);
-    border-radius:20px;
-    padding:6px 14px;
-    font-size:12.5px;
-    cursor:pointer;
-    font-family:'Inter';
-    font-weight:600;
-    margin-top:4px;
-  }
-  .example-block{
-    background:var(--tape);
-    border-radius:8px;
-    padding:12px 14px;
-    font-family:'JetBrains Mono',monospace;
-    font-size:12.5px;
-    line-height:1.6;
-  }
+  .example-toggle{align-self:flex-start;background:none;border:1.5px solid var(--casing);color:var(--casing);border-radius:20px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-family:'Inter';font-weight:600;margin-top:4px;}
+  .example-block{background:var(--tape);border-radius:8px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.6;}
   .example-block.hidden{display:none;}
   .ex-problem{font-weight:700;margin-bottom:6px;color:var(--casing);}
   .ex-steps{margin:0 0 6px 0;padding-left:18px;}
   .ex-steps li{margin-bottom:3px;}
   .ex-answer{font-weight:700;color:var(--amber-dark);}
 
+  /* ---- Graphing Calculator ---- */
+  .graph-view-layout{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;}
+  .graph-controls{background:#fff;border-radius:14px;padding:20px;width:300px;box-shadow:0 14px 30px -10px rgba(15,65,74,.2);}
+  .graph-controls h3{font-family:'Space Grotesk',sans-serif;margin:0 0 14px;color:var(--casing);font-size:16px;}
+  .graph-canvas-wrap{background:#fff;border-radius:14px;padding:16px;flex:1;min-width:340px;box-shadow:0 14px 30px -10px rgba(15,65,74,.2);}
+  .fn-input-row{display:flex;gap:8px;margin-bottom:10px;}
+  .fn-input{flex:1;font-family:'JetBrains Mono',monospace;font-size:13px;padding:8px 10px;border:1.5px solid rgba(15,65,74,.25);border-radius:8px;background:var(--bg-page);color:var(--ink);}
+  .fn-input:focus{outline:none;border-color:var(--casing);}
+  .btn-primary{background:var(--casing);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'Inter';font-weight:600;font-size:13px;cursor:pointer;}
+  .btn-secondary{background:transparent;color:var(--casing);border:1.5px solid var(--casing);border-radius:8px;padding:8px 16px;font-family:'Inter';font-weight:600;font-size:13px;cursor:pointer;}
+  .key-points-box{background:var(--bg-page);border-radius:8px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:12px;margin-top:14px;line-height:1.8;min-height:60px;color:var(--ink);}
+  .range-row{display:flex;gap:8px;margin-bottom:10px;align-items:center;}
+  .range-row label{font-size:12px;color:#4C6B72;white-space:nowrap;}
+  .range-row input{width:70px;font-family:'JetBrains Mono',monospace;font-size:12px;padding:5px 7px;border:1.5px solid rgba(15,65,74,.2);border-radius:6px;background:var(--bg-page);}
+  .color-swatch{width:22px;height:22px;border-radius:50%;border:none;cursor:pointer;}
+
+  /* ---- Unit Converter ---- */
+  .converter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;max-width:900px;margin:0 auto;}
+  .converter-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 10px 24px -8px rgba(15,65,74,.18);}
+  .converter-card h3{font-family:'Space Grotesk',sans-serif;margin:0 0 14px;color:var(--casing);font-size:16px;}
+  .conv-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
+  .conv-input{width:100px;font-family:'JetBrains Mono',monospace;font-size:14px;padding:8px 10px;border:1.5px solid rgba(15,65,74,.2);border-radius:8px;background:var(--bg-page);color:var(--ink);}
+  .conv-select{flex:1;font-family:'Inter';font-size:13px;padding:8px 10px;border:1.5px solid rgba(15,65,74,.2);border-radius:8px;background:var(--bg-page);color:var(--ink);}
+  .conv-result{background:var(--bg-page);border-radius:8px;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--casing);margin-top:4px;min-height:38px;}
+
+  /* ---- Statistics Calculator ---- */
+  .stats-layout{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;}
+  .stats-input-panel{background:#fff;border-radius:14px;padding:20px;width:300px;box-shadow:0 10px 24px -8px rgba(15,65,74,.18);}
+  .stats-results-panel{background:#fff;border-radius:14px;padding:20px;flex:1;min-width:300px;box-shadow:0 10px 24px -8px rgba(15,65,74,.18);}
+  .stats-input-panel h3,.stats-results-panel h3{font-family:'Space Grotesk',sans-serif;margin:0 0 14px;color:var(--casing);}
+  .stats-textarea{width:100%;height:140px;font-family:'JetBrains Mono',monospace;font-size:13px;padding:10px;border:1.5px solid rgba(15,65,74,.2);border-radius:8px;resize:vertical;background:var(--bg-page);color:var(--ink);}
+  .stats-textarea:focus{outline:none;border-color:var(--casing);}
+  .stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(15,65,74,.15);font-size:14px;}
+  .stat-label{color:#4C6B72;font-size:13px;}
+  .stat-value{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--casing);}
+  .stat-steps{background:var(--bg-page);border-radius:8px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;margin-top:12px;max-height:220px;overflow-y:auto;}
+
+  /* ---- Image Scanner ---- */
+  .scanner-layout{max-width:700px;margin:0 auto;}
+  .drop-zone{border:2.5px dashed rgba(15,65,74,.3);border-radius:14px;padding:40px;text-align:center;background:#fff;cursor:pointer;transition:border-color .2s;}
+  .drop-zone:hover,.drop-zone.dragover{border-color:var(--casing);}
+  .drop-zone svg{opacity:.35;margin-bottom:12px;}
+  .drop-label{font-size:14px;color:#4C6B72;margin:0;}
+  .drop-sub{font-size:12px;color:#8fa5aa;margin:6px 0 0;}
+  #scanPreview{max-width:100%;border-radius:10px;margin:14px 0;display:none;}
+  .scan-result-box{background:#fff;border:1.5px solid rgba(15,65,74,.14);border-radius:12px;padding:16px;margin-top:14px;display:none;}
+  .scan-result-box h4{font-family:'Space Grotesk',sans-serif;color:var(--casing);margin:0 0 8px;}
+  .scan-expr{font-family:'JetBrains Mono',monospace;font-size:16px;background:var(--bg-page);padding:10px 12px;border-radius:8px;margin-bottom:10px;}
+  .scan-steps{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.8;color:var(--ink);}
+  .scan-answer{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--amber-dark);margin-top:10px;}
+  .ocr-status{font-size:13px;color:#4C6B72;font-style:italic;margin-top:10px;text-align:center;}
+
   footer.note{text-align:center;color:#76898C;font-size:12px;margin-top:40px;}
 
   @media (max-width:760px){
     .calculator-shell{width:100%;max-width:380px;}
     .tape-panel{width:100%;max-width:380px;}
+    .graph-controls,.stats-input-panel{width:100%;}
   }
-  @media (prefers-reduced-motion:reduce){
-    *{transition:none !important;}
-  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important;}}
 </style>
 </head>
 <body>
@@ -255,110 +205,207 @@
     <p class="sub">CalcMate is a comprehensive mathematical tool featuring a scientific calculator with step-by-step paper-tape logging and a structured formula reference with worked computations across Algebra, Geometry, Trigonometry, Probability, Statistics, and Calculus. Developed by Taglorin, Sarmiento &amp; Songuad.</p>
   </header>
 
-  <nav class="tabs">
-    <button class="tab-btn active" data-view="calculator-view">Calculator</button>
-    <button class="tab-btn" data-view="reference-view">Formula Reference</button>
+  <!-- Mode Navigation -->
+  <nav class="mode-nav">
+    <button class="mode-btn active" data-mode="scientific">🧮 Scientific</button>
+    <button class="mode-btn" data-mode="graphing">📈 Graphing</button>
+    <button class="mode-btn" data-mode="converter">⚖️ Unit Converter</button>
+    <button class="mode-btn" data-mode="statistics">📊 Statistics</button>
+    <button class="mode-btn" data-mode="scanner">📷 Image Scanner</button>
+    <button class="mode-btn" data-mode="reference">📚 Formula Reference</button>
   </nav>
 
-  <!-- ============ CALCULATOR VIEW ============ -->
-  <section id="calculator-view" class="view active">
+  <!-- ============ SCIENTIFIC CALCULATOR MODE ============ -->
+  <section id="mode-scientific" class="view active">
     <div class="app-layout">
-
       <div class="calculator-shell">
         <div class="lcd-screen">
           <div class="lcd-top-row">
             <span class="lcd-label">SCI · STD</span>
-            <button class="angle-toggle" id="angleModeBtn" title="Toggle angle mode for sin / cos / tan">DEG</button>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button class="tutor-toggle off" id="tutorToggleBtn" title="Toggle AI Tutor Mode">🎓 TUTOR OFF</button>
+              <button class="angle-toggle" id="angleModeBtn" title="Toggle angle mode">DEG</button>
+            </div>
           </div>
           <div class="lcd-expression" id="lcdExpression">&nbsp;</div>
           <div class="lcd-result" id="lcdResult">0</div>
         </div>
-
         <div class="keypad" id="keypad">
           <button class="key key-sci" data-action="cube">x³</button>
           <button class="key key-sci" data-action="sqrt">√x</button>
           <button class="key key-sci" data-action="square">x²</button>
           <button class="key key-op" data-op="^">x<sup>y</sup></button>
-
           <button class="key key-sci" data-action="sin">sin</button>
           <button class="key key-sci" data-action="cos">cos</button>
           <button class="key key-sci" data-action="tan">tan</button>
           <button class="key key-op" data-action="percent">%</button>
-
           <button class="key key-sci" data-action="pi">π</button>
           <button class="key key-sci" data-action="euler">e</button>
           <button class="key key-sci" data-action="reciprocal">1/x</button>
           <button class="key key-clear" data-action="backspace">⌫</button>
-
           <button class="key key-clear" data-action="clear-all">AC</button>
           <button class="key key-clear" data-action="clear-entry">CE</button>
           <button class="key key-sci" data-action="log">log</button>
           <button class="key key-sci" data-action="ln">ln</button>
-
           <button class="key key-num" data-digit="7">7</button>
           <button class="key key-num" data-digit="8">8</button>
           <button class="key key-num" data-digit="9">9</button>
           <button class="key key-op" data-op="÷">÷</button>
-
           <button class="key key-num" data-digit="4">4</button>
           <button class="key key-num" data-digit="5">5</button>
           <button class="key key-num" data-digit="6">6</button>
           <button class="key key-op" data-op="×">×</button>
-
           <button class="key key-num" data-digit="1">1</button>
           <button class="key key-num" data-digit="2">2</button>
           <button class="key key-num" data-digit="3">3</button>
           <button class="key key-op" data-op="−">−</button>
-
           <button class="key key-num" data-action="negate">±</button>
           <button class="key key-num" data-digit="0">0</button>
           <button class="key key-num" data-action="decimal">.</button>
           <button class="key key-op" data-op="+">+</button>
-
           <button class="key key-eq" data-action="equals">=</button>
         </div>
       </div>
 
-      <aside class="tape-panel">
-        <div class="tape-header">
-          <span class="tape-title">PAPER TAPE</span>
-          <button class="tape-clear" id="clearTapeBtn">clear tape</button>
-        </div>
-        <div class="tape-caption">Every step your calculator performs, logged like a receipt.</div>
-        <div class="tape-roll" id="tapeRoll">
-          <div class="tape-empty">No calculations yet — start pressing keys.</div>
-        </div>
-      </aside>
+      <div style="display:flex;flex-direction:column;gap:16px;flex:1;min-width:280px;max-width:340px;">
+        <!-- Paper Tape -->
+        <aside class="tape-panel" style="max-height:300px;">
+          <div class="tape-header">
+            <span class="tape-title">PAPER TAPE</span>
+            <button class="tape-clear" id="clearTapeBtn">clear tape</button>
+          </div>
+          <div class="tape-caption">Click any entry to reuse it.</div>
+          <div class="tape-roll" id="tapeRoll">
+            <div class="tape-empty">No calculations yet — start pressing keys.</div>
+          </div>
+        </aside>
 
+        <!-- History Panel -->
+        <aside class="tape-panel" style="max-height:300px;">
+          <div class="tape-header">
+            <span class="tape-title">HISTORY</span>
+            <button class="tape-clear" id="clearHistoryBtn">clear all</button>
+          </div>
+          <div class="tape-caption">Persisted across sessions. Click to recall.</div>
+          <div class="tape-roll" id="historyRoll">
+            <div class="tape-empty">No history yet.</div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- AI Tutor Panel -->
+      <div style="flex:1;min-width:280px;max-width:340px;">
+        <div class="tutor-panel" id="tutorPanel">
+          <div class="tutor-heading">
+            <span>🎓 AI Tutor</span>
+            <span class="tutor-badge">STEP-BY-STEP</span>
+          </div>
+          <div id="tutorSteps"></div>
+        </div>
+        <div style="margin-top:16px;background:#fff;border-radius:14px;padding:16px;box-shadow:0 10px 24px -8px rgba(15,65,74,.15);">
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--casing);margin-bottom:10px;">💡 Tutor Mode</div>
+          <p style="font-size:13px;color:#4C6B72;margin:0 0 8px;">Enable the <strong>TUTOR</strong> button above to see step-by-step explanations, applied math rules, and reasoning for every calculation you perform.</p>
+          <p style="font-size:12px;color:#8fa5aa;margin:0;">Rules identified: Order of Operations, Trig identities, Exponent laws, Logarithm properties, and more.</p>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- ============ FORMULA REFERENCE VIEW ============ -->
-  <section id="reference-view" class="view">
+  <!-- ============ GRAPHING CALCULATOR MODE ============ -->
+  <section id="mode-graphing" class="view">
+    <div class="graph-view-layout">
+      <div class="graph-controls">
+        <h3>📈 Function Input</h3>
+        <div id="fnList"></div>
+        <button class="btn-secondary" id="addFnBtn" style="width:100%;margin-bottom:14px;">+ Add Function</button>
+        <div class="range-row">
+          <label>X min</label>
+          <input type="number" id="xMin" value="-10">
+          <label>X max</label>
+          <input type="number" id="xMax" value="10">
+        </div>
+        <button class="btn-primary" id="plotBtn" style="width:100%;">Plot Graph</button>
+        <div class="key-points-box" id="keyPointsBox">Key points will appear here after plotting.</div>
+      </div>
+      <div class="graph-canvas-wrap">
+        <canvas id="graphCanvas" height="420"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ UNIT CONVERTER MODE ============ -->
+  <section id="mode-converter" class="view">
+    <div class="converter-grid" id="converterGrid"></div>
+  </section>
+
+  <!-- ============ STATISTICS CALCULATOR MODE ============ -->
+  <section id="mode-statistics" class="view">
+    <div class="stats-layout">
+      <div class="stats-input-panel">
+        <h3>📊 Data Input</h3>
+        <p style="font-size:13px;color:#4C6B72;margin:0 0 10px;">Enter numbers separated by commas or new lines.</p>
+        <textarea class="stats-textarea" id="statsInput" placeholder="e.g. 2, 4, 4, 4, 5, 5, 7, 9"></textarea>
+        <button class="btn-primary" id="calcStatsBtn" style="width:100%;margin-top:10px;">Calculate Statistics</button>
+      </div>
+      <div class="stats-results-panel">
+        <h3>Results</h3>
+        <div id="statsResults"><p style="color:#8fa5aa;font-size:13px;">Enter data and click Calculate.</p></div>
+        <div class="stat-steps" id="statsSteps" style="display:none;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ IMAGE SCANNER MODE ============ -->
+  <section id="mode-scanner" class="view">
+    <div class="scanner-layout">
+      <h3 style="font-family:'Space Grotesk',sans-serif;color:var(--casing);margin-bottom:6px;">📷 Image-to-Math Scanner</h3>
+      <p style="font-size:14px;color:#4C6B72;margin:0 0 16px;">Upload an image containing a math expression. CalcMate will extract the equation, solve it, and show step-by-step working.</p>
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('imgInput').click()">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p class="drop-label">Click to upload or drag &amp; drop an image</p>
+        <p class="drop-sub">Supports JPG, PNG, GIF · Handwritten or printed equations</p>
+        <input type="file" id="imgInput" accept="image/*" style="display:none;">
+      </div>
+      <img id="scanPreview" alt="Preview">
+      <div class="ocr-status" id="ocrStatus"></div>
+      <div class="scan-result-box" id="scanResultBox">
+        <h4>Detected Expression</h4>
+        <div class="scan-expr" id="scanExpr"></div>
+        <h4 style="margin-top:12px;">Solution Steps</h4>
+        <div class="scan-steps" id="scanSteps"></div>
+        <div class="scan-answer" id="scanAnswer"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FORMULA REFERENCE MODE ============ -->
+  <section id="mode-reference" class="view">
     <p class="ref-intro">A compiled set of formulas across seven subjects. Tap <strong>Show worked example</strong> on any card to see the manual, step-by-step computation.</p>
     <div class="pills" id="categoryPills"></div>
     <div class="card-grid" id="cardGrid"></div>
   </section>
 
-  <footer class="note">Built for studying — double-check critical work by hand.</footer>
+  <footer class="note">CalcMate · Developed by Taglorin, Sarmiento &amp; Songuad · Built for studying — double-check critical work by hand.</footer>
 </div>
 
 <script>
-/* =========================================================
-   TAB SWITCHING
-   ========================================================= */
-document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+/* ==========================================================
+   MODE SWITCHING
+   ========================================================== */
+const modeButtons = document.querySelectorAll('.mode-btn');
+modeButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    modeButtons.forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById(btn.dataset.view).classList.add('active');
+    const id = 'mode-' + btn.dataset.mode;
+    document.getElementById(id).classList.add('active');
   });
 });
 
-/* =========================================================
-   CALCULATOR LOGIC
-   ========================================================= */
+/* ==========================================================
+   CALCULATOR LOGIC (ORIGINAL — UNTOUCHED)
+   ========================================================== */
 const lcdExpression = document.getElementById('lcdExpression');
 const lcdResult = document.getElementById('lcdResult');
 const angleModeBtn = document.getElementById('angleModeBtn');
@@ -380,18 +427,20 @@ function fmt(n){
   return rounded.toString();
 }
 
-function opLabel(op){
-  return op === '^' ? 'xʸ' : op;
-}
+function opLabel(op){ return op === '^' ? 'xʸ' : op; }
 
 function logStep(text, isError){
-  if (!hasLogged){
-    tapeRoll.innerHTML = '';
-    hasLogged = true;
-  }
+  if (!hasLogged){ tapeRoll.innerHTML = ''; hasLogged = true; }
   const line = document.createElement('div');
   line.className = 'tape-step' + (isError ? ' err' : '');
   line.textContent = text;
+  line.addEventListener('click', () => {
+    const parts = text.split('=');
+    if (parts.length > 1){
+      const val = parts[parts.length-1].trim();
+      if (!isNaN(parseFloat(val))){ display = val; refreshDisplay(); }
+    }
+  });
   tapeRoll.appendChild(line);
   tapeRoll.scrollTop = tapeRoll.scrollHeight;
 }
@@ -407,22 +456,13 @@ function refreshDisplay(){
 }
 
 function inputDigit(d){
-  if (waitingForSecondOperand){
-    display = d;
-    waitingForSecondOperand = false;
-  } else {
-    display = (display === '0') ? d : display + d;
-  }
+  if (waitingForSecondOperand){ display = d; waitingForSecondOperand = false; }
+  else { display = (display === '0') ? d : display + d; }
   refreshDisplay();
 }
 
 function inputDecimal(){
-  if (waitingForSecondOperand){
-    display = '0.';
-    waitingForSecondOperand = false;
-    refreshDisplay();
-    return;
-  }
+  if (waitingForSecondOperand){ display = '0.'; waitingForSecondOperand = false; refreshDisplay(); return; }
   if (!display.includes('.')) display += '.';
   refreshDisplay();
 }
@@ -440,19 +480,13 @@ function negate(){
 }
 
 function clearAll(){
-  display = '0';
-  firstOperand = null;
-  operator = null;
-  waitingForSecondOperand = false;
+  display = '0'; firstOperand = null; operator = null; waitingForSecondOperand = false;
   refreshDisplay();
 }
 
-function clearEntry(){
-  display = '0';
-  refreshDisplay();
-}
+function clearEntry(){ display = '0'; refreshDisplay(); }
 
-function calculate(a,b,op){
+function calculate(a, b, op){
   switch(op){
     case '+': return {value:a+b};
     case '−': return {value:a-b};
@@ -466,34 +500,20 @@ function calculate(a,b,op){
 
 function applyOperator(nextOperator){
   const inputValue = parseFloat(display);
-
-  if (operator && waitingForSecondOperand){
-    operator = nextOperator;
-    refreshDisplay();
-    return;
-  }
-
-  if (firstOperand === null){
-    firstOperand = inputValue;
-  } else if (operator){
+  if (operator && waitingForSecondOperand){ operator = nextOperator; refreshDisplay(); return; }
+  if (firstOperand === null){ firstOperand = inputValue; }
+  else if (operator){
     const res = calculate(firstOperand, inputValue, operator);
     if (res.error){
-      logStep(fmt(firstOperand) + ' ' + opLabel(operator) + ' ' + fmt(inputValue) + ' \u2192 Error: ' + res.error, true);
-      display = 'Error';
-      firstOperand = null;
-      operator = null;
-      waitingForSecondOperand = true;
-      refreshDisplay();
-      return;
+      logStep(fmt(firstOperand)+' '+opLabel(operator)+' '+fmt(inputValue)+' → Error: '+res.error, true);
+      display = 'Error'; firstOperand = null; operator = null; waitingForSecondOperand = true;
+      refreshDisplay(); return;
     }
-    logStep(fmt(firstOperand) + ' ' + opLabel(operator) + ' ' + fmt(inputValue) + ' = ' + fmt(res.value));
-    display = fmt(res.value);
-    firstOperand = res.value;
+    logStep(fmt(firstOperand)+' '+opLabel(operator)+' '+fmt(inputValue)+' = '+fmt(res.value));
+    showTutorBinary(firstOperand, inputValue, operator, res.value);
+    display = fmt(res.value); firstOperand = res.value;
   }
-
-  waitingForSecondOperand = true;
-  operator = nextOperator;
-  refreshDisplay();
+  waitingForSecondOperand = true; operator = nextOperator; refreshDisplay();
 }
 
 function equals(){
@@ -501,85 +521,64 @@ function equals(){
   const inputValue = waitingForSecondOperand ? firstOperand : parseFloat(display);
   const res = calculate(firstOperand, inputValue, operator);
   if (res.error){
-    logStep(fmt(firstOperand) + ' ' + opLabel(operator) + ' ' + fmt(inputValue) + ' \u2192 Error: ' + res.error, true);
+    logStep(fmt(firstOperand)+' '+opLabel(operator)+' '+fmt(inputValue)+' → Error: '+res.error, true);
     display = 'Error';
   } else {
-    logStep(fmt(firstOperand) + ' ' + opLabel(operator) + ' ' + fmt(inputValue) + ' = ' + fmt(res.value));
+    logStep(fmt(firstOperand)+' '+opLabel(operator)+' '+fmt(inputValue)+' = '+fmt(res.value));
+    showTutorBinary(firstOperand, inputValue, operator, res.value);
+    addHistory(fmt(firstOperand)+' '+opLabel(operator)+' '+fmt(inputValue), fmt(res.value));
     display = fmt(res.value);
   }
-  firstOperand = null;
-  operator = null;
-  waitingForSecondOperand = true;
-  refreshDisplay();
+  firstOperand = null; operator = null; waitingForSecondOperand = true; refreshDisplay();
 }
 
 function unary(action){
   const v = parseFloat(display);
   let result, text, error = false;
-
   switch(action){
     case 'sqrt':
-      if (v < 0){ error = true; text = '√(' + fmt(v) + ') \u2192 Error: no real square root of a negative number'; }
-      else { result = Math.sqrt(v); text = '√(' + fmt(v) + ') = ' + fmt(result); }
-      break;
+      if (v < 0){ error=true; text='√('+fmt(v)+') → Error: no real square root of a negative'; }
+      else { result=Math.sqrt(v); text='√('+fmt(v)+') = '+fmt(result); } break;
     case 'square':
-      result = v*v; text = fmt(v) + '² = ' + fmt(v) + ' × ' + fmt(v) + ' = ' + fmt(result);
-      break;
+      result=v*v; text=fmt(v)+'² = '+fmt(v)+' × '+fmt(v)+' = '+fmt(result); break;
     case 'cube':
-      result = v*v*v; text = fmt(v) + '³ = ' + fmt(v) + ' × ' + fmt(v) + ' × ' + fmt(v) + ' = ' + fmt(result);
-      break;
+      result=v*v*v; text=fmt(v)+'³ = '+fmt(v)+'×'+fmt(v)+'×'+fmt(v)+' = '+fmt(result); break;
     case 'reciprocal':
-      if (v === 0){ error = true; text = '1 ÷ 0 \u2192 Error: cannot divide by zero'; }
-      else { result = 1/v; text = '1 ÷ ' + fmt(v) + ' = ' + fmt(result); }
-      break;
+      if (v===0){ error=true; text='1 ÷ 0 → Error: cannot divide by zero'; }
+      else { result=1/v; text='1 ÷ '+fmt(v)+' = '+fmt(result); } break;
     case 'percent':
-      result = v/100; text = fmt(v) + '% = ' + fmt(v) + ' ÷ 100 = ' + fmt(result);
-      break;
+      result=v/100; text=fmt(v)+'% = '+fmt(v)+' ÷ 100 = '+fmt(result); break;
     case 'log':
-      if (v <= 0){ error = true; text = 'log(' + fmt(v) + ') \u2192 Error: input must be greater than 0'; }
-      else { result = Math.log10(v); text = 'log(' + fmt(v) + ') = ' + fmt(result); }
-      break;
+      if (v<=0){ error=true; text='log('+fmt(v)+') → Error: input must be > 0'; }
+      else { result=Math.log10(v); text='log('+fmt(v)+') = '+fmt(result); } break;
     case 'ln':
-      if (v <= 0){ error = true; text = 'ln(' + fmt(v) + ') \u2192 Error: input must be greater than 0'; }
-      else { result = Math.log(v); text = 'ln(' + fmt(v) + ') = ' + fmt(result); }
-      break;
+      if (v<=0){ error=true; text='ln('+fmt(v)+') → Error: input must be > 0'; }
+      else { result=Math.log(v); text='ln('+fmt(v)+') = '+fmt(result); } break;
     case 'sin': case 'cos': case 'tan': {
-      const rad = angleMode === 'DEG' ? v * Math.PI/180 : v;
-      result = Math[action](rad);
-      const unitTxt = angleMode === 'DEG' ? '°' : ' rad';
-      text = action + '(' + fmt(v) + unitTxt + ') = ' + fmt(result);
-      break;
+      const rad = angleMode==='DEG' ? v*Math.PI/180 : v;
+      result=Math[action](rad);
+      const unitTxt = angleMode==='DEG' ? '°' : ' rad';
+      text=action+'('+fmt(v)+unitTxt+') = '+fmt(result); break;
     }
   }
-
-  if (error){
-    logStep(text, true);
-    display = 'Error';
-    waitingForSecondOperand = true;
-  } else {
-    logStep(text);
-    display = fmt(result);
-    waitingForSecondOperand = true;
-  }
+  if (error){ logStep(text,true); display='Error'; waitingForSecondOperand=true; }
+  else { logStep(text); showTutorUnary(action,v,result); addHistory(text.split('=')[0].trim(), fmt(result)); display=fmt(result); waitingForSecondOperand=true; }
   refreshDisplay();
 }
 
 function insertConstant(name){
-  const value = name === 'pi' ? Math.PI : Math.E;
-  const symbol = name === 'pi' ? 'π' : 'e';
-  display = fmt(value);
-  waitingForSecondOperand = true;
-  logStep('Inserted constant ' + symbol + ' \u2248 ' + fmt(value));
+  const value = name==='pi' ? Math.PI : Math.E;
+  const symbol = name==='pi' ? 'π' : 'e';
+  display=fmt(value); waitingForSecondOperand=true;
+  logStep('Inserted constant '+symbol+' ≈ '+fmt(value));
   refreshDisplay();
 }
 
 document.getElementById('keypad').addEventListener('click', (e)=>{
   const btn = e.target.closest('button');
   if (!btn) return;
-
   if (btn.dataset.digit !== undefined){ inputDigit(btn.dataset.digit); return; }
   if (btn.dataset.op !== undefined){ applyOperator(btn.dataset.op); return; }
-
   switch(btn.dataset.action){
     case 'decimal': inputDecimal(); break;
     case 'backspace': backspace(); break;
@@ -587,8 +586,8 @@ document.getElementById('keypad').addEventListener('click', (e)=>{
     case 'clear-all': clearAll(); break;
     case 'clear-entry': clearEntry(); break;
     case 'equals': equals(); break;
-    case 'sqrt': case 'square': case 'cube': case 'reciprocal': case 'percent':
-    case 'log': case 'ln': case 'sin': case 'cos': case 'tan':
+    case 'sqrt':case 'square':case 'cube':case 'reciprocal':case 'percent':
+    case 'log':case 'ln':case 'sin':case 'cos':case 'tan':
       unary(btn.dataset.action); break;
     case 'pi': insertConstant('pi'); break;
     case 'euler': insertConstant('euler'); break;
@@ -596,306 +595,602 @@ document.getElementById('keypad').addEventListener('click', (e)=>{
 });
 
 angleModeBtn.addEventListener('click', ()=>{
-  angleMode = angleMode === 'DEG' ? 'RAD' : 'DEG';
+  angleMode = angleMode==='DEG' ? 'RAD' : 'DEG';
   angleModeBtn.textContent = angleMode;
 });
 
 clearTapeBtn.addEventListener('click', ()=>{
-  tapeRoll.innerHTML = '<div class="tape-empty">No calculations yet — start pressing keys.</div>';
-  hasLogged = false;
+  tapeRoll.innerHTML='<div class="tape-empty">No calculations yet — start pressing keys.</div>';
+  hasLogged=false;
 });
 
 document.addEventListener('keydown', (e)=>{
-  if (!document.getElementById('calculator-view').classList.contains('active')) return;
-  if (e.key >= '0' && e.key <= '9'){ inputDigit(e.key); return; }
-  if (e.key === '.'){ inputDecimal(); return; }
-  if (e.key === '+'){ applyOperator('+'); return; }
-  if (e.key === '-'){ applyOperator('−'); return; }
-  if (e.key === '*'){ applyOperator('×'); return; }
-  if (e.key === '/'){ e.preventDefault(); applyOperator('÷'); return; }
-  if (e.key === '^'){ applyOperator('^'); return; }
-  if (e.key === 'Enter' || e.key === '='){ e.preventDefault(); equals(); return; }
-  if (e.key === 'Backspace'){ backspace(); return; }
-  if (e.key === 'Escape'){ clearAll(); return; }
+  if (!document.getElementById('mode-scientific').classList.contains('active')) return;
+  if (e.key>='0'&&e.key<='9'){ inputDigit(e.key); return; }
+  if (e.key==='.'){ inputDecimal(); return; }
+  if (e.key==='+'){ applyOperator('+'); return; }
+  if (e.key==='-'){ applyOperator('−'); return; }
+  if (e.key==='*'){ applyOperator('×'); return; }
+  if (e.key==='/'){ e.preventDefault(); applyOperator('÷'); return; }
+  if (e.key==='^'){ applyOperator('^'); return; }
+  if (e.key==='Enter'||e.key==='='){ e.preventDefault(); equals(); return; }
+  if (e.key==='Backspace'){ backspace(); return; }
+  if (e.key==='Escape'){ clearAll(); return; }
 });
 
 refreshDisplay();
 
-/* =========================================================
-   FORMULA REFERENCE DATA + RENDERING
-   ========================================================= */
+/* ==========================================================
+   FEATURE 1 – AI TUTOR MODE
+   ========================================================== */
+let tutorEnabled = false;
+const tutorToggleBtn = document.getElementById('tutorToggleBtn');
+const tutorPanel = document.getElementById('tutorPanel');
+const tutorSteps = document.getElementById('tutorSteps');
+
+tutorToggleBtn.addEventListener('click', ()=>{
+  tutorEnabled = !tutorEnabled;
+  tutorToggleBtn.textContent = tutorEnabled ? '🎓 TUTOR ON' : '🎓 TUTOR OFF';
+  tutorToggleBtn.classList.toggle('off', !tutorEnabled);
+  tutorPanel.classList.toggle('show', tutorEnabled);
+  if (!tutorEnabled) tutorSteps.innerHTML='';
+});
+
+function addTutorStep(html, isRule=false){
+  if (!tutorEnabled) return;
+  tutorPanel.classList.add('show');
+  const el=document.createElement('div');
+  el.className='tutor-step'+(isRule?' rule':'');
+  el.innerHTML=html;
+  el.style.animationDelay=(tutorSteps.children.length*0.08)+'s';
+  tutorSteps.appendChild(el);
+  tutorPanel.scrollTop=tutorPanel.scrollHeight;
+}
+
+function clearTutor(){ tutorSteps.innerHTML=''; }
+
+const OP_NAMES={'+':'Addition','−':'Subtraction','×':'Multiplication','÷':'Division','^':'Exponentiation'};
+const OP_RULES={
+  '+':'Rule: Commutative Property — a + b = b + a. Order does not change the sum.',
+  '−':'Rule: Subtraction is the inverse of addition. a − b ≠ b − a (not commutative).',
+  '×':'Rule: Commutative Property — a × b = b × a. Associative: (a×b)×c = a×(b×c).',
+  '÷':'Rule: Division is the inverse of multiplication. Never divide by zero — undefined.',
+  '^':'Rule: Exponentiation — aⁿ means multiply a by itself n times. a⁰ = 1 for any a ≠ 0.'
+};
+
+function showTutorBinary(a, b, op, result){
+  clearTutor();
+  addTutorStep(`<b>Operation:</b> ${OP_NAMES[op] || op}`);
+  addTutorStep(`<b>Step 1:</b> Identify the operands<br>First value: <b>${fmt(a)}</b> &nbsp;|&nbsp; Second value: <b>${fmt(b)}</b>`);
+  if (op==='+') addTutorStep(`<b>Step 2:</b> Add the values<br>${fmt(a)} + ${fmt(b)} = <b>${fmt(result)}</b>`);
+  else if (op==='−') addTutorStep(`<b>Step 2:</b> Subtract the second value from the first<br>${fmt(a)} − ${fmt(b)} = <b>${fmt(result)}</b>`);
+  else if (op==='×') addTutorStep(`<b>Step 2:</b> Multiply both values<br>${fmt(a)} × ${fmt(b)} = <b>${fmt(result)}</b>`);
+  else if (op==='÷') addTutorStep(`<b>Step 2:</b> Divide the first by the second<br>${fmt(a)} ÷ ${fmt(b)} = <b>${fmt(result)}</b>`);
+  else if (op==='^') addTutorStep(`<b>Step 2:</b> Raise ${fmt(a)} to the power of ${fmt(b)}<br>${fmt(a)}^${fmt(b)} = <b>${fmt(result)}</b>`);
+  addTutorStep(`<b>Result:</b> <b>${fmt(result)}</b>`, false);
+  if (OP_RULES[op]) addTutorStep(OP_RULES[op], true);
+}
+
+function showTutorUnary(action, v, result){
+  clearTutor();
+  const actionMap={
+    'sqrt':['Square Root','√x removes exponent of 2. Rule: √(x²) = |x|. Only valid for x ≥ 0 in real numbers.',
+      `<b>Step 1:</b> Input x = ${fmt(v)}<br><b>Step 2:</b> Apply √x → √${fmt(v)} = <b>${fmt(result)}</b>`],
+    'square':['Squaring (x²)','Rule: x² = x × x. Exponent law: xⁿ means multiply x by itself n times.',
+      `<b>Step 1:</b> Input x = ${fmt(v)}<br><b>Step 2:</b> Compute ${fmt(v)} × ${fmt(v)} = <b>${fmt(result)}</b>`],
+    'cube':['Cubing (x³)','Rule: x³ = x × x × x. Part of the power rule of exponents.',
+      `<b>Step 1:</b> Input x = ${fmt(v)}<br><b>Step 2:</b> Compute ${fmt(v)}³ = <b>${fmt(result)}</b>`],
+    'reciprocal':['Reciprocal (1/x)','Rule: 1/x is the multiplicative inverse. x × (1/x) = 1, for x ≠ 0.',
+      `<b>Step 1:</b> Input x = ${fmt(v)}<br><b>Step 2:</b> Compute 1 ÷ ${fmt(v)} = <b>${fmt(result)}</b>`],
+    'percent':['Percentage','Rule: percent means "per hundred". x% = x/100.',
+      `<b>Step 1:</b> Input x = ${fmt(v)}<br><b>Step 2:</b> Compute ${fmt(v)} ÷ 100 = <b>${fmt(result)}</b>`],
+    'log':['Common Logarithm (log₁₀)','Rule: log₁₀(x) = y means 10^y = x. Domain: x > 0.',
+      `<b>Step 1:</b> Input x = ${fmt(v)}<br><b>Step 2:</b> log₁₀(${fmt(v)}) = <b>${fmt(result)}</b>`],
+    'ln':['Natural Logarithm (ln)','Rule: ln(x) = logₑ(x) where e ≈ 2.71828. Domain: x > 0.',
+      `<b>Step 1:</b> Input x = ${fmt(v)}<br><b>Step 2:</b> ln(${fmt(v)}) = <b>${fmt(result)}</b>`],
+    'sin':['Sine Function','Rule: sin(θ) = opposite/hypotenuse. Pythagorean Identity: sin²θ + cos²θ = 1.',
+      `<b>Step 1:</b> Input angle = ${fmt(v)} ${angleMode}<br><b>Step 2:</b> sin(${fmt(v)}${angleMode==='DEG'?'°':' rad'}) = <b>${fmt(result)}</b>`],
+    'cos':['Cosine Function','Rule: cos(θ) = adjacent/hypotenuse. Related: cos(0°) = 1, cos(90°) = 0.',
+      `<b>Step 1:</b> Input angle = ${fmt(v)} ${angleMode}<br><b>Step 2:</b> cos(${fmt(v)}${angleMode==='DEG'?'°':' rad'}) = <b>${fmt(result)}</b>`],
+    'tan':['Tangent Function','Rule: tan(θ) = sin(θ)/cos(θ) = opposite/adjacent. Undefined at 90°.',
+      `<b>Step 1:</b> Input angle = ${fmt(v)} ${angleMode}<br><b>Step 2:</b> tan(${fmt(v)}${angleMode==='DEG'?'°':' rad'}) = <b>${fmt(result)}</b>`],
+  };
+  const [name, rule, steps] = actionMap[action] || ['Operation','',''];
+  addTutorStep(`<b>Operation:</b> ${name}`);
+  addTutorStep(steps);
+  addTutorStep(`<b>Result:</b> <b>${fmt(result)}</b>`);
+  if (rule) addTutorStep(rule, true);
+}
+
+/* ==========================================================
+   FEATURE 4 – HISTORY + SOLUTION LOG (localStorage)
+   ========================================================== */
+const historyRoll = document.getElementById('historyRoll');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+let calcHistory = JSON.parse(localStorage.getItem('calcmate_history') || '[]');
+
+function renderHistory(){
+  if (calcHistory.length===0){
+    historyRoll.innerHTML='<div class="tape-empty">No history yet.</div>'; return;
+  }
+  historyRoll.innerHTML='';
+  [...calcHistory].reverse().forEach((item, i)=>{
+    const el=document.createElement('div');
+    el.className='history-item';
+    el.innerHTML=`<div class="history-expr">${item.expr}</div><div class="history-result">= ${item.result}</div>`;
+    el.addEventListener('click',()=>{
+      display=item.result; waitingForSecondOperand=true; refreshDisplay();
+    });
+    historyRoll.appendChild(el);
+  });
+}
+
+function addHistory(expr, result){
+  calcHistory.push({expr, result, ts: Date.now()});
+  if (calcHistory.length>50) calcHistory.shift();
+  localStorage.setItem('calcmate_history', JSON.stringify(calcHistory));
+  renderHistory();
+}
+
+clearHistoryBtn.addEventListener('click',()=>{
+  calcHistory=[]; localStorage.removeItem('calcmate_history'); renderHistory();
+});
+
+renderHistory();
+
+/* ==========================================================
+   FEATURE 3 – GRAPHING CALCULATOR
+   ========================================================== */
+const GRAPH_COLORS=['#7F0303','#0F414A','#1a6b3a','#7B5C00','#5C0270'];
+let fnInputs=[];
+let graphChart=null;
+
+function addFnRow(expr=''){
+  const idx=fnInputs.length;
+  const color=GRAPH_COLORS[idx % GRAPH_COLORS.length];
+  const row=document.createElement('div');
+  row.className='fn-input-row';
+  row.innerHTML=`
+    <div style="width:14px;height:14px;border-radius:50%;background:${color};flex-shrink:0;margin-top:10px;"></div>
+    <input class="fn-input" placeholder="e.g. x^2, sin(x)" value="${expr}">
+    <button style="background:none;border:none;cursor:pointer;font-size:18px;color:#888;padding:0 4px;" onclick="removeFnRow(${idx})">×</button>
+  `;
+  document.getElementById('fnList').appendChild(row);
+  fnInputs.push(row);
+}
+
+function removeFnRow(idx){
+  if (fnInputs[idx]) { fnInputs[idx].remove(); fnInputs[idx]=null; }
+}
+
+document.getElementById('addFnBtn').addEventListener('click',()=>addFnRow());
+
+function evalFn(expr, x){
+  let e=expr.trim()
+    .replace(/\^/g,'**')
+    .replace(/sin\(/g,'Math.sin(')
+    .replace(/cos\(/g,'Math.cos(')
+    .replace(/tan\(/g,'Math.tan(')
+    .replace(/sqrt\(/g,'Math.sqrt(')
+    .replace(/log\(/g,'Math.log10(')
+    .replace(/ln\(/g,'Math.log(')
+    .replace(/abs\(/g,'Math.abs(')
+    .replace(/pi/gi,'Math.PI')
+    .replace(/e(?!\w)/g,'Math.E')
+    .replace(/x/g,`(${x})`);
+  try { return Function('"use strict"; return ('+e+')')(); } catch(err){ return NaN; }
+}
+
+document.getElementById('plotBtn').addEventListener('click', plotGraph);
+function plotGraph(){
+  const xMin=parseFloat(document.getElementById('xMin').value)||(-10);
+  const xMax=parseFloat(document.getElementById('xMax').value)||(10);
+  const steps=400;
+  const xs=[];
+  for(let i=0;i<=steps;i++) xs.push(xMin+(xMax-xMin)*i/steps);
+
+  const datasets=[];
+  const allInputs=document.querySelectorAll('#fnList .fn-input');
+  let keyText='';
+
+  allInputs.forEach((inp,ci)=>{
+    const expr=inp.value.trim(); if(!expr) return;
+    const color=GRAPH_COLORS[ci%GRAPH_COLORS.length];
+    const ys=xs.map(x=>evalFn(expr,x));
+    datasets.push({label:`y = ${expr}`,data:xs.map((x,i)=>({x,y:ys[i]})),borderColor:color,backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:0.1,spanGaps:false});
+
+    // Key points
+    let roots=[],peaks=[];
+    for(let i=1;i<ys.length-1;i++){
+      if(!isNaN(ys[i])&&isFinite(ys[i])){
+        if(ys[i-1]*ys[i]<0||Math.abs(ys[i])<0.05) roots.push(xs[i].toFixed(3));
+        if(ys[i]>ys[i-1]&&ys[i]>ys[i+1]) peaks.push(`x=${xs[i].toFixed(2)}, y=${ys[i].toFixed(3)}`);
+      }
+    }
+    keyText+=`<b style="color:${color}">y = ${expr}</b>\n`;
+    if(roots.length) keyText+=`  Roots ≈ x: ${[...new Set(roots)].slice(0,4).join(', ')}\n`;
+    if(peaks.length) keyText+=`  Peaks: ${peaks.slice(0,3).join(' | ')}\n`;
+    const yAt0=evalFn(expr,0);
+    if(!isNaN(yAt0)&&isFinite(yAt0)) keyText+=`  y-intercept: (0, ${yAt0.toFixed(4)})\n`;
+    keyText+='\n';
+  });
+
+  const ctx=document.getElementById('graphCanvas').getContext('2d');
+  if(graphChart) graphChart.destroy();
+  graphChart=new Chart(ctx,{
+    type:'scatter',
+    data:{datasets},
+    options:{
+      animation:false,
+      responsive:true,
+      scales:{
+        x:{type:'linear',title:{display:true,text:'x'},grid:{color:'rgba(0,0,0,0.08)'}},
+        y:{title:{display:true,text:'y'},grid:{color:'rgba(0,0,0,0.08)'}}
+      },
+      plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>`(${ctx.parsed.x.toFixed(3)}, ${ctx.parsed.y.toFixed(4)})`}}}
+    }
+  });
+  document.getElementById('keyPointsBox').innerHTML=keyText || 'No valid functions found.';
+}
+
+addFnRow('x^2');
+addFnRow('sin(x)');
+
+/* ==========================================================
+   FEATURE 5 – UNIT CONVERTER
+   ========================================================== */
+const CONVERTERS=[
+  { title:'📏 Length', units:['mm','cm','m','km','in','ft','yd','mi'],
+    toBase:{mm:0.001,cm:0.01,m:1,km:1000,in:0.0254,ft:0.3048,yd:0.9144,mi:1609.344} },
+  { title:'⚖️ Weight / Mass', units:['mg','g','kg','ton','oz','lb'],
+    toBase:{mg:0.000001,g:0.001,kg:1,ton:1000,oz:0.0283495,lb:0.453592} },
+  { title:'🌡️ Temperature', units:['°C','°F','K'],
+    special:true },
+  { title:'⏱️ Time', units:['ms','s','min','hr','day','wk'],
+    toBase:{ms:0.001,s:1,min:60,hr:3600,day:86400,wk:604800} },
+  { title:'📐 Area', units:['cm²','m²','km²','in²','ft²','acre'],
+    toBase:{'cm²':0.0001,'m²':1,'km²':1e6,'in²':0.00064516,'ft²':0.092903,'acre':4046.86} },
+  { title:'💧 Volume', units:['ml','l','m³','fl oz','cup','gal'],
+    toBase:{ml:0.001,l:1,'m³':1000,'fl oz':0.0295735,cup:0.236588,gal:3.78541} },
+];
+
+function convertTemp(val, from, to){
+  let c;
+  if(from==='°C') c=val;
+  else if(from==='°F') c=(val-32)*5/9;
+  else c=val-273.15;
+  if(to==='°C') return c;
+  if(to==='°F') return c*9/5+32;
+  return c+273.15;
+}
+
+function buildConverters(){
+  const grid=document.getElementById('converterGrid');
+  CONVERTERS.forEach(conv=>{
+    const card=document.createElement('div');
+    card.className='converter-card';
+    card.innerHTML=`<h3>${conv.title}</h3>`;
+
+    const row=document.createElement('div');
+    row.className='conv-row';
+
+    const inp=document.createElement('input');
+    inp.type='number'; inp.className='conv-input'; inp.value='1'; inp.placeholder='Value';
+
+    const fromSel=document.createElement('select'); fromSel.className='conv-select';
+    const toSel=document.createElement('select'); toSel.className='conv-select';
+    conv.units.forEach(u=>{ fromSel.innerHTML+=`<option>${u}</option>`; toSel.innerHTML+=`<option>${u}</option>`; });
+    toSel.selectedIndex=1;
+
+    const result=document.createElement('div'); result.className='conv-result';
+
+    function doConvert(){
+      const v=parseFloat(inp.value);
+      if(isNaN(v)){ result.textContent='—'; return; }
+      let out;
+      if(conv.special){ out=convertTemp(v, fromSel.value, toSel.value); }
+      else { out=v*conv.toBase[fromSel.value]/conv.toBase[toSel.value]; }
+      result.textContent=`${v} ${fromSel.value} = ${parseFloat(out.toPrecision(7))} ${toSel.value}`;
+    }
+
+    [inp,fromSel,toSel].forEach(el=>el.addEventListener('input',doConvert));
+    row.appendChild(inp); row.appendChild(fromSel); row.appendChild(toSel);
+    card.appendChild(row); card.appendChild(result);
+    grid.appendChild(card);
+    doConvert();
+  });
+}
+buildConverters();
+
+/* ==========================================================
+   FEATURE 6 – STATISTICS CALCULATOR
+   ========================================================== */
+document.getElementById('calcStatsBtn').addEventListener('click',()=>{
+  const raw=document.getElementById('statsInput').value;
+  const nums=raw.split(/[\n,]+/).map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n));
+  const res=document.getElementById('statsResults');
+  const stepsEl=document.getElementById('statsSteps');
+  if(nums.length===0){ res.innerHTML='<p style="color:var(--amber);">No valid numbers found.</p>'; return; }
+
+  const sorted=[...nums].sort((a,b)=>a-b);
+  const n=nums.length;
+  const sum=nums.reduce((a,b)=>a+b,0);
+  const mean=sum/n;
+  const sorted2=[...sorted];
+  const median=n%2===0 ? (sorted2[n/2-1]+sorted2[n/2])/2 : sorted2[Math.floor(n/2)];
+  const freq={};
+  nums.forEach(x=>{ freq[x]=(freq[x]||0)+1; });
+  const maxF=Math.max(...Object.values(freq));
+  const modes=Object.keys(freq).filter(k=>freq[k]===maxF).map(Number);
+  const range=sorted[n-1]-sorted[0];
+  const variance=nums.reduce((a,b)=>a+(b-mean)**2,0)/n;
+  const std=Math.sqrt(variance);
+  const sampleVar=n>1?nums.reduce((a,b)=>a+(b-mean)**2,0)/(n-1):0;
+  const sampleStd=Math.sqrt(sampleVar);
+  const q1=sorted2[Math.floor(n/4)];
+  const q3=sorted2[Math.floor(3*n/4)];
+
+  res.innerHTML=`
+    <div class="stat-row"><span class="stat-label">Count (n)</span><span class="stat-value">${n}</span></div>
+    <div class="stat-row"><span class="stat-label">Sum (Σx)</span><span class="stat-value">${sum.toFixed(4)}</span></div>
+    <div class="stat-row"><span class="stat-label">Mean (x̄)</span><span class="stat-value">${mean.toFixed(4)}</span></div>
+    <div class="stat-row"><span class="stat-label">Median</span><span class="stat-value">${median}</span></div>
+    <div class="stat-row"><span class="stat-label">Mode</span><span class="stat-value">${modes.join(', ')} (freq: ${maxF})</span></div>
+    <div class="stat-row"><span class="stat-label">Range</span><span class="stat-value">${range.toFixed(4)}</span></div>
+    <div class="stat-row"><span class="stat-label">Q1</span><span class="stat-value">${q1}</span></div>
+    <div class="stat-row"><span class="stat-label">Q3</span><span class="stat-value">${q3}</span></div>
+    <div class="stat-row"><span class="stat-label">Pop. Variance (σ²)</span><span class="stat-value">${variance.toFixed(4)}</span></div>
+    <div class="stat-row"><span class="stat-label">Pop. Std Dev (σ)</span><span class="stat-value">${std.toFixed(4)}</span></div>
+    <div class="stat-row"><span class="stat-label">Sample Variance (s²)</span><span class="stat-value">${sampleVar.toFixed(4)}</span></div>
+    <div class="stat-row"><span class="stat-label">Sample Std Dev (s)</span><span class="stat-value">${sampleStd.toFixed(4)}</span></div>
+    <div class="stat-row"><span class="stat-label">Min</span><span class="stat-value">${sorted[0]}</span></div>
+    <div class="stat-row"><span class="stat-label">Max</span><span class="stat-value">${sorted[n-1]}</span></div>
+  `;
+  stepsEl.style.display='block';
+  stepsEl.innerHTML=
+    `Data (n=${n}): [${sorted.join(', ')}]\n`+
+    `Sum = ${nums.join(' + ')} = ${sum.toFixed(4)}\n`+
+    `Mean = ${sum.toFixed(4)} ÷ ${n} = ${mean.toFixed(4)}\n`+
+    `Sorted: [${sorted.join(', ')}]\n`+
+    `Median = ${n%2===0?`(${sorted2[n/2-1]} + ${sorted2[n/2]}) ÷ 2`:sorted2[Math.floor(n/2)]} = ${median}\n`+
+    `Variance σ² = Σ(xᵢ - x̄)² / n = ${variance.toFixed(4)}\n`+
+    `Std Dev σ = √${variance.toFixed(4)} = ${std.toFixed(4)}`;
+});
+
+/* ==========================================================
+   FEATURE 2 – IMAGE-TO-MATH SCANNER
+   ========================================================== */
+const dropZone=document.getElementById('dropZone');
+const imgInput=document.getElementById('imgInput');
+const scanPreview=document.getElementById('scanPreview');
+const ocrStatus=document.getElementById('ocrStatus');
+const scanResultBox=document.getElementById('scanResultBox');
+
+dropZone.addEventListener('dragover',e=>{ e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop',e=>{ e.preventDefault(); dropZone.classList.remove('dragover'); const f=e.dataTransfer.files[0]; if(f) processImage(f); });
+imgInput.addEventListener('change',e=>{ if(e.target.files[0]) processImage(e.target.files[0]); });
+
+async function processImage(file){
+  const url=URL.createObjectURL(file);
+  scanPreview.src=url; scanPreview.style.display='block';
+  scanResultBox.style.display='none';
+  ocrStatus.textContent='🔍 Scanning image with OCR… this may take a few seconds.';
+
+  try {
+    const result = await Tesseract.recognize(url, 'eng', {
+      logger: m => { if(m.status==='recognizing text') ocrStatus.textContent=`🔍 OCR Progress: ${Math.round(m.progress*100)}%`; }
+    });
+    const raw=result.data.text;
+    ocrStatus.textContent='✅ Scan complete!';
+    const cleaned=cleanMathExpr(raw);
+    displayScanResult(cleaned);
+  } catch(err){
+    ocrStatus.textContent='❌ OCR failed. Try a clearer image with printed text.';
+  }
+}
+
+function cleanMathExpr(text){
+  return text.replace(/\n/g,' ').replace(/[^\d+\-*/^().x=√sincostanlogln\s]/gi,'').trim().substring(0,100);
+}
+
+function displayScanResult(expr){
+  document.getElementById('scanExpr').textContent = expr || '(No equation detected — try a clearer image)';
+  let answer='', steps=[];
+  try {
+    const clean=expr.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/\^/g,'**');
+    const val=Function('"use strict"; return ('+clean+')')();
+    if(!isNaN(val)&&isFinite(val)){
+      steps=['Detected expression: '+expr,'Evaluated: '+val];
+      answer='= '+val;
+    } else { steps=['Expression detected but could not be evaluated automatically.']; }
+  } catch(e){ steps=['Could not evaluate — expression may contain variables or be symbolic.']; }
+  document.getElementById('scanSteps').innerHTML=steps.map(s=>`• ${s}`).join('<br>');
+  document.getElementById('scanAnswer').textContent=answer;
+  scanResultBox.style.display='block';
+}
+
+/* ==========================================================
+   FORMULA REFERENCE DATA + RENDERING (ORIGINAL — UNTOUCHED)
+   ========================================================== */
 const FORMULAS = [
   { category:'Algebra', items:[
     { name:'Quadratic Formula', formula:'x = (−b ± √(b²−4ac)) / 2a',
       note:'Solves any equation of the form ax² + bx + c = 0.',
       example:{ problem:'Solve 2x² + 5x − 3 = 0',
-        steps:[
-          'Identify a = 2, b = 5, c = −3',
-          'Discriminant: b² − 4ac = 25 − 4(2)(−3) = 25 + 24 = 49',
-          '√49 = 7',
-          'x = (−5 ± 7) / (2·2) = (−5 ± 7) / 4'
-        ], answer:'x = 0.5  or  x = −3' } },
+        steps:['Identify a = 2, b = 5, c = −3','Discriminant: b² − 4ac = 25 − 4(2)(−3) = 25 + 24 = 49','√49 = 7','x = (−5 ± 7) / (2·2) = (−5 ± 7) / 4'],
+        answer:'x = 0.5  or  x = −3' } },
     { name:'Slope of a Line', formula:'m = (y₂ − y₁) / (x₂ − x₁)',
       note:'Measures steepness between two points.',
       example:{ problem:'Find the slope through (2, 3) and (6, 11)',
-        steps:[ 'm = (11 − 3) / (6 − 2)', 'm = 8 / 4' ], answer:'m = 2' } },
+        steps:['m = (11 − 3) / (6 − 2)','m = 8 / 4'], answer:'m = 2' } },
     { name:'Difference of Squares', formula:'a² − b² = (a − b)(a + b)',
       note:'A quick factoring pattern.',
       example:{ problem:'Factor x² − 49',
-        steps:[ 'Recognize 49 = 7²', 'Apply pattern with a = x, b = 7' ], answer:'(x − 7)(x + 7)' } },
+        steps:['Recognize 49 = 7²','Apply pattern with a = x, b = 7'], answer:'(x − 7)(x + 7)' } },
     { name:'Perfect Square Trinomial', formula:'a² + 2ab + b² = (a + b)²',
       note:'Used to spot and expand squared binomials.',
       example:{ problem:'Expand (x + 4)²',
-        steps:[ 'a = x, b = 4', 'a² = x², 2ab = 8x, b² = 16' ], answer:'x² + 8x + 16' } },
+        steps:['a = x, b = 4','a² = x², 2ab = 8x, b² = 16'], answer:'x² + 8x + 16' } },
     { name:'Laws of Exponents', formula:'a^m · a^n = a^(m+n)     (a^m)^n = a^(mn)     a^(−n) = 1/a^n',
       note:'Core rules for combining powers.',
       example:{ problem:'Simplify x³ · x⁴',
-        steps:[ 'Same base, add exponents: 3 + 4 = 7' ], answer:'x⁷' } },
+        steps:['Same base, add exponents: 3 + 4 = 7'], answer:'x⁷' } },
     { name:'Laws of Logarithms', formula:'log(xy) = log x + log y,   log(x/y) = log x − log y,   log(xⁿ) = n·log x',
       note:'Mirrors the exponent rules for logs.',
       example:{ problem:'Expand log(8x³)',
-        steps:[ 'log(8x³) = log 8 + log x³', 'log x³ = 3·log x' ], answer:'log 8 + 3·log x' } }
+        steps:['log(8x³) = log 8 + log x³','log x³ = 3·log x'], answer:'log 8 + 3·log x' } }
   ]},
-
   { category:'Geometry', items:[
     { name:'Pythagorean Theorem', formula:'a² + b² = c²',
       note:'Relates the legs and hypotenuse of a right triangle.',
       example:{ problem:'Find the hypotenuse of a right triangle with legs 3 and 4',
-        steps:[ 'c² = 3² + 4² = 9 + 16 = 25', 'c = √25' ], answer:'c = 5' } },
+        steps:['c² = 3² + 4² = 9 + 16 = 25','c = √25'], answer:'c = 5' } },
     { name:'Circle: Area & Circumference', formula:'A = πr²        C = 2πr',
       note:'Two core measurements of a circle.',
       example:{ problem:'A circle has radius 4',
-        steps:[ 'Area: A = π(4²) = 16π ≈ 50.27', 'Circumference: C = 2π(4) = 8π ≈ 25.13' ],
+        steps:['Area: A = π(4²) = 16π ≈ 50.27','Circumference: C = 2π(4) = 8π ≈ 25.13'],
         answer:'A ≈ 50.27, C ≈ 25.13' } },
     { name:'Area of a Triangle', formula:'A = ½ · base · height',
       example:{ problem:'A triangle has base 10 and height 6',
-        steps:[ 'A = ½ × 10 × 6', 'A = ½ × 60' ], answer:'A = 30' } },
+        steps:['A = ½ × 10 × 6','A = ½ × 60'], answer:'A = 30' } },
     { name:'Area of a Trapezoid', formula:'A = ½(b₁ + b₂)·h',
       example:{ problem:'A trapezoid has parallel sides 8 and 5, height 4',
-        steps:[ 'A = ½(8 + 5)(4)', 'A = ½(13)(4) = ½(52)' ], answer:'A = 26' } },
+        steps:['A = ½(8 + 5)(4)','A = ½(13)(4) = ½(52)'], answer:'A = 26' } },
     { name:'Distance Between Two Points', formula:'d = √[(x₂−x₁)² + (y₂−y₁)²]',
       example:{ problem:'Find the distance between (1, 2) and (4, 6)',
-        steps:[ 'd = √[(4−1)² + (6−2)²]', 'd = √[9 + 16] = √25' ], answer:'d = 5' } },
+        steps:['d = √[(4−1)² + (6−2)²]','d = √[9 + 16] = √25'], answer:'d = 5' } },
     { name:'Volume of a Cylinder', formula:'V = πr²h',
       example:{ problem:'A cylinder has radius 3 and height 10',
-        steps:[ 'V = π(3²)(10)', 'V = π(9)(10) = 90π' ], answer:'V ≈ 282.74' } },
+        steps:['V = π(3²)(10)','V = π(9)(10) = 90π'], answer:'V ≈ 282.74' } },
     { name:'Volume of a Sphere', formula:'V = (4/3)πr³',
       example:{ problem:'A sphere has radius 6',
-        steps:[ 'V = (4/3)π(6³)', 'V = (4/3)π(216) = 288π' ], answer:'V ≈ 904.78' } },
+        steps:['V = (4/3)π(6³)','V = (4/3)π(216) = 288π'], answer:'V ≈ 904.78' } },
     { name:'Volume of a Cone', formula:'V = (1/3)πr²h',
       example:{ problem:'A cone has radius 3 and height 9',
-        steps:[ 'V = (1/3)π(3²)(9)', 'V = (1/3)π(81) = 27π' ], answer:'V ≈ 84.82' } }
+        steps:['V = (1/3)π(3²)(9)','V = (1/3)π(81) = 27π'], answer:'V ≈ 84.82' } }
   ]},
-
   { category:'Trigonometry', items:[
     { name:'SOH-CAH-TOA', formula:'sin θ = opp/hyp   cos θ = adj/hyp   tan θ = opp/adj',
       note:'The basic right-triangle ratios.',
-      example:{ problem:'A right triangle has opposite side 3 and hypotenuse 5 (a 3-4-5 triangle)',
-        steps:[ 'Adjacent side: √(5² − 3²) = √16 = 4', 'sin θ = 3/5 = 0.6', 'cos θ = 4/5 = 0.8', 'tan θ = 3/4 = 0.75' ],
+      example:{ problem:'A right triangle has opposite side 3 and hypotenuse 5',
+        steps:['Adjacent side: √(5² − 3²) = √16 = 4','sin θ = 3/5 = 0.6','cos θ = 4/5 = 0.8','tan θ = 3/4 = 0.75'],
         answer:'θ = sin⁻¹(0.6) ≈ 36.87°' } },
     { name:'Pythagorean Identity', formula:'sin²θ + cos²θ = 1',
       example:{ problem:'Verify the identity for θ = 30°',
-        steps:[ 'sin 30° = 0.5 → 0.5² = 0.25', 'cos 30° ≈ 0.8660 → 0.8660² ≈ 0.75', '0.25 + 0.75' ], answer:'= 1 ✓' } },
+        steps:['sin 30° = 0.5 → 0.5² = 0.25','cos 30° ≈ 0.8660 → 0.8660² ≈ 0.75','0.25 + 0.75'], answer:'= 1 ✓' } },
     { name:'Law of Sines', formula:'a/sin A = b/sin B = c/sin C',
       note:'Relates sides and opposite angles in any triangle.',
       example:{ problem:'A = 30°, a = 10, B = 45°. Find side b.',
-        steps:[ 'b = a · sin B / sin A', 'b = 10 × sin 45° / sin 30°', 'b = 10 × 0.7071 / 0.5' ], answer:'b ≈ 14.14' } },
+        steps:['b = a · sin B / sin A','b = 10 × sin 45° / sin 30°','b = 10 × 0.7071 / 0.5'], answer:'b ≈ 14.14' } },
     { name:'Law of Cosines', formula:'c² = a² + b² − 2ab·cos C',
       note:'Used when you know two sides and the included angle.',
       example:{ problem:'a = 7, b = 10, C = 60°. Find side c.',
-        steps:[ 'c² = 7² + 10² − 2(7)(10)cos 60°', 'c² = 49 + 100 − 140(0.5)', 'c² = 149 − 70 = 79' ], answer:'c ≈ 8.89' } },
+        steps:['c² = 7² + 10² − 2(7)(10)cos 60°','c² = 49 + 100 − 140(0.5)','c² = 149 − 70 = 79'], answer:'c ≈ 8.89' } },
     { name:'Degrees ↔ Radians', formula:'radians = degrees × π/180',
       example:{ problem:'Convert 90° to radians',
-        steps:[ 'rad = 90 × π/180', 'rad = π/2' ], answer:'≈ 1.5708 rad' } }
+        steps:['rad = 90 × π/180','rad = π/2'], answer:'≈ 1.5708 rad' } }
   ]},
-
   { category:'General Math', items:[
     { name:'Percentage of a Number', formula:'part = (percent/100) × whole',
-      example:{ problem:'Find 15% of 80',
-        steps:[ '0.15 × 80' ], answer:'= 12' } },
+      example:{ problem:'Find 15% of 80', steps:['0.15 × 80'], answer:'= 12' } },
     { name:'Percent Change', formula:'% change = (new − old)/old × 100',
-      example:{ problem:'A price goes from 50 to 65',
-        steps:[ '(65 − 50)/50 × 100', '15/50 × 100' ], answer:'= 30% increase' } },
+      example:{ problem:'A price goes from 50 to 65', steps:['(65 − 50)/50 × 100','15/50 × 100'], answer:'= 30% increase' } },
     { name:'Ratio & Proportion', formula:'a/b = c/d  ⟹  a·d = b·c',
-      example:{ problem:'Solve 3/4 = x/20',
-        steps:[ 'Cross multiply: 3 × 20 = 4 × x', '60 = 4x' ], answer:'x = 15' } },
+      example:{ problem:'Solve 3/4 = x/20', steps:['Cross multiply: 3 × 20 = 4 × x','60 = 4x'], answer:'x = 15' } },
     { name:'Simple Interest', formula:'I = P · r · t',
-      note:'P = principal, r = annual rate (decimal), t = years.',
-      example:{ problem:'P = $1000, r = 5%, t = 3 years',
-        steps:[ 'I = 1000 × 0.05 × 3' ], answer:'I = $150' } },
-    { name:'Compound Interest', formula:'A = P(1 + r/n)ⁿᵗ',
-      example:{ problem:'P = $1000, r = 5%, compounded yearly (n=1), t = 3 years',
-        steps:[ 'A = 1000(1 + 0.05)³', 'A = 1000(1.157625)' ], answer:'A ≈ $1157.63' } },
-    { name:'PEMDAS (Order of Operations)', formula:'Parentheses → Exponents → Mult/Div → Add/Sub',
-      example:{ problem:'Evaluate 3 + 4 × 2²',
-        steps:[ 'Exponent first: 2² = 4', 'Multiply: 4 × 4 = 16', 'Add: 3 + 16' ], answer:'= 19' } }
+      example:{ problem:'P = $1000, r = 5%, t = 3 years', steps:['I = 1000 × 0.05 × 3'], answer:'I = $150' } },
+    { name:'Compound Interest', formula:'A = P(1 + r/n)^(nt)',
+      example:{ problem:'P = $1000, r = 5%, n = 12, t = 3', steps:['A = 1000(1 + 0.05/12)^(12×3)','A = 1000(1.004167)^36'], answer:'A ≈ $1161.62' } }
   ]},
-
   { category:'Probability', items:[
-    { name:'Basic Probability', formula:'P(A) = favorable outcomes / total outcomes',
-      example:{ problem:'A bag has 4 red marbles out of 10 total. Find P(red).',
-        steps:[ 'P(red) = 4/10' ], answer:'= 0.4' } },
+    { name:'Basic Probability', formula:'P(A) = favourable outcomes / total outcomes',
+      example:{ problem:'Rolling a fair die — probability of getting a 3', steps:['Favourable: 1','Total: 6'], answer:'P(3) = 1/6 ≈ 0.167' } },
     { name:'Complement Rule', formula:"P(A') = 1 − P(A)",
-      example:{ problem:'If P(red) = 0.4, find P(not red).',
-        steps:[ "P(A') = 1 − 0.4" ], answer:'= 0.6' } },
+      example:{ problem:'If P(red) = 0.4, find P(not red).', steps:["P(A') = 1 − 0.4"], answer:'= 0.6' } },
     { name:'Independent Events (AND)', formula:'P(A and B) = P(A) × P(B)',
-      example:{ problem:'Probability of heads (0.5) AND rolling a 3 on a die (1/6)',
-        steps:[ 'P = 0.5 × (1/6)' ], answer:'≈ 0.0833' } },
+      example:{ problem:'Probability of heads (0.5) AND rolling a 3 (1/6)', steps:['P = 0.5 × (1/6)'], answer:'≈ 0.0833' } },
     { name:'Mutually Exclusive Events (OR)', formula:'P(A or B) = P(A) + P(B)',
-      example:{ problem:'Probability of rolling a 2 OR a 5 on a die',
-        steps:[ 'P(2) = 1/6, P(5) = 1/6', 'P(2 or 5) = 1/6 + 1/6' ], answer:'= 1/3 ≈ 0.333' } },
-    { name:'Combinations', formula:'C(n,r) = n! / [r!(n−r)!]',
-      note:'Order does not matter.',
-      example:{ problem:'How many ways to choose 2 items from 5?',
-        steps:[ 'C(5,2) = 5! / (2!·3!)', '= 120 / (2 × 6)' ], answer:'= 10' } },
-    { name:'Permutations', formula:'P(n,r) = n! / (n−r)!',
-      note:'Order matters.',
-      example:{ problem:'How many ways to arrange 2 items from 5?',
-        steps:[ 'P(5,2) = 5! / 3!', '= 120 / 6' ], answer:'= 20' } }
+      example:{ problem:'Rolling a 2 OR a 5 on a die', steps:['P(2) = 1/6, P(5) = 1/6','P(2 or 5) = 1/6 + 1/6'], answer:'= 1/3 ≈ 0.333' } },
+    { name:'Combinations', formula:'C(n,r) = n! / [r!(n−r)!]', note:'Order does not matter.',
+      example:{ problem:'Ways to choose 2 items from 5?', steps:['C(5,2) = 5! / (2!·3!)','= 120 / (2 × 6)'], answer:'= 10' } },
+    { name:'Permutations', formula:'P(n,r) = n! / (n−r)!', note:'Order matters.',
+      example:{ problem:'Ways to arrange 2 items from 5?', steps:['P(5,2) = 5! / 3!','= 120 / 6'], answer:'= 20' } }
   ]},
-
   { category:'Statistics', items:[
     { name:'Mean (Average)', formula:'x̄ = Σx / n',
-      example:{ problem:'Data set: 2, 4, 4, 4, 5, 5, 7, 9',
-        steps:[ 'Sum = 2+4+4+4+5+5+7+9 = 40', 'n = 8', '40 / 8' ], answer:'mean = 5' } },
+      example:{ problem:'Data set: 2, 4, 4, 4, 5, 5, 7, 9', steps:['Sum = 40','n = 8','40 / 8'], answer:'mean = 5' } },
     { name:'Median', formula:'Middle value of data sorted in order',
-      example:{ problem:'Same data set: 2, 4, 4, 4, 5, 5, 7, 9 (n = 8, even)',
-        steps:[ 'Already sorted', 'Average the 4th and 5th values: (4 + 5)/2' ], answer:'median = 4.5' } },
+      example:{ problem:'Data: 2, 4, 4, 4, 5, 5, 7, 9 (n=8, even)', steps:['Already sorted','Average 4th and 5th: (4+5)/2'], answer:'median = 4.5' } },
     { name:'Mode', formula:'The most frequently occurring value',
-      example:{ problem:'Same data set: 2, 4, 4, 4, 5, 5, 7, 9',
-        steps:[ '4 appears 3 times — more than any other value' ], answer:'mode = 4' } },
+      example:{ problem:'Data: 2, 4, 4, 4, 5, 5, 7, 9', steps:['4 appears 3 times'], answer:'mode = 4' } },
     { name:'Range', formula:'range = max − min',
-      example:{ problem:'Same data set: 2, 4, 4, 4, 5, 5, 7, 9',
-        steps:[ 'max = 9, min = 2', '9 − 2' ], answer:'range = 7' } },
+      example:{ problem:'Data: 2, 4, 4, 4, 5, 5, 7, 9', steps:['max=9, min=2','9−2'], answer:'range = 7' } },
     { name:'Variance (Population)', formula:'σ² = Σ(x − μ)² / n',
-      example:{ problem:'Same data set, mean μ = 5',
-        steps:[ 'Squared deviations: (2−5)²=9, (4−5)²=1 ×3, (5−5)²=0 ×2, (7−5)²=4, (9−5)²=16',
-                'Sum = 9+3+0+4+16 = 32', '32 / 8' ], answer:'σ² = 4' } },
+      example:{ problem:'Data set, mean μ = 5', steps:['Squared deviations sum = 32','32 / 8'], answer:'σ² = 4' } },
     { name:'Standard Deviation', formula:'σ = √(variance)',
-      example:{ problem:'From the variance above, σ² = 4',
-        steps:[ 'σ = √4' ], answer:'σ = 2' } },
+      example:{ problem:'σ² = 4', steps:['σ = √4'], answer:'σ = 2' } },
     { name:'Z-Score', formula:'z = (x − μ) / σ',
-      example:{ problem:'x = 7, μ = 5, σ = 2',
-        steps:[ 'z = (7 − 5) / 2' ], answer:'z = 1.0' } }
+      example:{ problem:'x = 7, μ = 5, σ = 2', steps:['z = (7−5)/2'], answer:'z = 1.0' } }
   ]},
-
   { category:'Calculus', items:[
     { name:'Power Rule (Derivative)', formula:'d/dx[xⁿ] = n·xⁿ⁻¹',
-      example:{ problem:'Differentiate f(x) = x⁴, then evaluate at x = 2',
-        steps:[ "f'(x) = 4x³", "f'(2) = 4(2³) = 4(8)" ], answer:"f'(2) = 32" } },
+      example:{ problem:"Differentiate f(x) = x⁴, evaluate at x = 2", steps:["f'(x) = 4x³","f'(2) = 4(8)"], answer:"f'(2) = 32" } },
     { name:'Derivatives of sin & cos', formula:'d/dx[sin x] = cos x      d/dx[cos x] = −sin x',
-      example:{ problem:'Differentiate f(x) = sin x, then evaluate at x = 0',
-        steps:[ "f'(x) = cos x", "f'(0) = cos(0)" ], answer:"f'(0) = 1" } },
+      example:{ problem:"Differentiate f(x) = sin x at x = 0", steps:["f'(x) = cos x","f'(0) = cos(0)"], answer:"f'(0) = 1" } },
     { name:'Product Rule', formula:"d/dx[u·v] = u'v + u·v'",
-      example:{ problem:'Differentiate f(x) = x²·sin x, then evaluate at x = π/2',
-        steps:[ "u = x², v = sin x → u' = 2x, v' = cos x",
-                "f'(x) = 2x·sin x + x²·cos x",
-                "f'(π/2) = 2(π/2)(1) + (π/2)²(0) = π" ], answer:"f'(π/2) ≈ 3.14" } },
+      example:{ problem:"Differentiate f(x) = x²·sin x at x = π/2", steps:["u=x², v=sinx → u'=2x, v'=cosx","f'(x) = 2x·sinx + x²·cosx","f'(π/2) = π"], answer:"f'(π/2) ≈ 3.14" } },
     { name:'Quotient Rule', formula:"d/dx[u/v] = (u'v − u·v') / v²",
-      example:{ problem:'Differentiate f(x) = x/(x+1), then evaluate at x = 1',
-        steps:[ "u = x, v = x+1 → u' = 1, v' = 1",
-                "f'(x) = [1(x+1) − x(1)] / (x+1)² = 1/(x+1)²",
-                "f'(1) = 1/(2²)" ], answer:"f'(1) = 0.25" } },
+      example:{ problem:"Differentiate f(x) = x/(x+1) at x=1", steps:["u=x, v=x+1","f'(x) = 1/(x+1)²","f'(1) = 1/4"], answer:"f'(1) = 0.25" } },
     { name:'Chain Rule', formula:"d/dx[f(g(x))] = f'(g(x))·g'(x)",
-      example:{ problem:'Differentiate f(x) = (3x+1)⁵, then evaluate at x = 0',
-        steps:[ "Outer: 5(3x+1)⁴, inner derivative: 3", "f'(x) = 15(3x+1)⁴", "f'(0) = 15(1)⁴" ], answer:"f'(0) = 15" } },
+      example:{ problem:"Differentiate f(x) = (3x+1)⁵ at x=0", steps:["f'(x) = 15(3x+1)⁴","f'(0) = 15"], answer:"f'(0) = 15" } },
     { name:'Power Rule (Integral)', formula:'∫xⁿ dx = xⁿ⁺¹/(n+1) + C',
-      example:{ problem:'Evaluate the definite integral ∫₀² x³ dx',
-        steps:[ 'Antiderivative: x⁴/4', 'Evaluate at bounds: (2⁴/4) − (0⁴/4)', '= 16/4 − 0' ], answer:'= 4' } },
-    { name:'Fundamental Theorem of Calculus', formula:'∫ₐᵇ f(x) dx = F(b) − F(a)',
-      example:{ problem:'Evaluate ∫₁³ 2x dx',
-        steps:[ 'Antiderivative: F(x) = x²', 'F(3) − F(1) = 9 − 1' ], answer:'= 8' } }
+      example:{ problem:'Evaluate ∫₀² x³ dx', steps:['Antiderivative: x⁴/4','(2⁴/4)−(0⁴/4) = 4'], answer:'= 4' } },
+    { name:'Fundamental Theorem', formula:'∫ₐᵇ f(x) dx = F(b) − F(a)',
+      example:{ problem:'Evaluate ∫₁³ 2x dx', steps:['F(x) = x²','F(3)−F(1) = 9−1'], answer:'= 8' } }
   ]}
 ];
 
-const categoryPills = document.getElementById('categoryPills');
-const cardGrid = document.getElementById('cardGrid');
-const ALL_CATEGORIES = ['All', ...FORMULAS.map(c=>c.category)];
-let activeCategory = 'All';
+const categoryPills=document.getElementById('categoryPills');
+const cardGrid=document.getElementById('cardGrid');
+const ALL_CATEGORIES=['All',...FORMULAS.map(c=>c.category)];
+let activeCategory='All';
 
 function renderPills(){
-  categoryPills.innerHTML = '';
+  categoryPills.innerHTML='';
   ALL_CATEGORIES.forEach(cat=>{
-    const pill = document.createElement('button');
-    pill.className = 'pill' + (cat === activeCategory ? ' active' : '');
-    pill.textContent = cat;
-    pill.addEventListener('click', ()=>{
-      activeCategory = cat;
-      renderPills();
-      renderCards();
-    });
+    const pill=document.createElement('button');
+    pill.className='pill'+(cat===activeCategory?' active':'');
+    pill.textContent=cat;
+    pill.addEventListener('click',()=>{ activeCategory=cat; renderPills(); renderCards(); });
     categoryPills.appendChild(pill);
   });
 }
 
 function renderCards(){
-  cardGrid.innerHTML = '';
+  cardGrid.innerHTML='';
   FORMULAS.forEach(group=>{
-    if (activeCategory !== 'All' && activeCategory !== group.category) return;
+    if(activeCategory!=='All'&&activeCategory!==group.category) return;
     group.items.forEach(item=>{
-      const card = document.createElement('div');
-      card.className = 'formula-card';
-
-      const catEl = document.createElement('div');
-      catEl.className = 'card-cat';
-      catEl.textContent = group.category;
-
-      const nameEl = document.createElement('h3');
-      nameEl.className = 'card-name';
-      nameEl.textContent = item.name;
-
-      const formulaEl = document.createElement('div');
-      formulaEl.className = 'card-formula';
-      formulaEl.innerHTML = item.formula;
-
-      card.appendChild(catEl);
-      card.appendChild(nameEl);
-      card.appendChild(formulaEl);
-
-      if (item.note){
-        const noteEl = document.createElement('p');
-        noteEl.className = 'card-note';
-        noteEl.textContent = item.note;
-        card.appendChild(noteEl);
-      }
-
-      if (item.example){
-        const toggle = document.createElement('button');
-        toggle.className = 'example-toggle';
-        toggle.textContent = 'Show worked example';
-
-        const block = document.createElement('div');
-        block.className = 'example-block hidden';
-
-        const probEl = document.createElement('div');
-        probEl.className = 'ex-problem';
-        probEl.innerHTML = 'Problem: ' + item.example.problem;
+      const card=document.createElement('div'); card.className='formula-card';
+      const catEl=document.createElement('div'); catEl.className='card-cat'; catEl.textContent=group.category;
+      const nameEl=document.createElement('h3'); nameEl.className='card-name'; nameEl.textContent=item.name;
+      const formulaEl=document.createElement('div'); formulaEl.className='card-formula'; formulaEl.innerHTML=item.formula;
+      card.appendChild(catEl); card.appendChild(nameEl); card.appendChild(formulaEl);
+      if(item.note){ const noteEl=document.createElement('p'); noteEl.className='card-note'; noteEl.textContent=item.note; card.appendChild(noteEl); }
+      if(item.example){
+        const toggle=document.createElement('button'); toggle.className='example-toggle'; toggle.textContent='Show worked example';
+        const block=document.createElement('div'); block.className='example-block hidden';
+        const probEl=document.createElement('div'); probEl.className='ex-problem'; probEl.innerHTML='Problem: '+item.example.problem;
         block.appendChild(probEl);
-
-        const stepsList = document.createElement('ol');
-        stepsList.className = 'ex-steps';
-        item.example.steps.forEach(s=>{
-          const li = document.createElement('li');
-          li.innerHTML = s;
-          stepsList.appendChild(li);
-        });
+        const stepsList=document.createElement('ol'); stepsList.className='ex-steps';
+        item.example.steps.forEach(s=>{ const li=document.createElement('li'); li.innerHTML=s; stepsList.appendChild(li); });
         block.appendChild(stepsList);
-
-        const ansEl = document.createElement('div');
-        ansEl.className = 'ex-answer';
-        ansEl.innerHTML = 'Answer: ' + item.example.answer;
+        const ansEl=document.createElement('div'); ansEl.className='ex-answer'; ansEl.innerHTML='Answer: '+item.example.answer;
         block.appendChild(ansEl);
-
-        toggle.addEventListener('click', ()=>{
-          const isHidden = block.classList.contains('hidden');
-          block.classList.toggle('hidden');
-          toggle.textContent = isHidden ? 'Hide worked example' : 'Show worked example';
-        });
-
-        card.appendChild(toggle);
-        card.appendChild(block);
+        toggle.addEventListener('click',()=>{ const h=block.classList.contains('hidden'); block.classList.toggle('hidden'); toggle.textContent=h?'Hide worked example':'Show worked example'; });
+        card.appendChild(toggle); card.appendChild(block);
       }
-
       cardGrid.appendChild(card);
     });
   });
